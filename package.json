@@ -1,0 +1,27 @@
+{
+  "name": "bexbox-pl",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tobyrushton/bexbox-pl.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/tobyrushton/bexbox-pl/issues"
+  },
+  "homepage": "https://github.com/tobyrushton/bexbox-pl#readme",
+  "description": "",
+  "dependencies": {
+    "sst": "4.5.7"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.161"
+  }
+}
