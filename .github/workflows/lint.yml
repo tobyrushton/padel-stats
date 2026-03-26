@@ -1,0 +1,34 @@
+name: Lint
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  gofmt:
+    name: Check Go formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+
+      - name: Run gofmt
+        id: gofmt
+        run: |
+          unformatted=$(find . -name "*.go" -not -path "./vendor/*" | xargs gofmt -l)
+          if [ -n "$unformatted" ]; then
+            echo "The following files are not formatted correctly:"
+            echo "$unformatted"
+            echo ""
+            echo "Run 'gofmt -w ./...' locally to fix them."
+            exit 1
+          fi
+          echo "All Go files are properly formatted."
