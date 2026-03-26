@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/alecthomas/kong v1.14.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/sst/sst/v3 v3.19.3
 	github.com/uptrace/bun v1.2.18
