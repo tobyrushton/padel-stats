@@ -26,6 +26,9 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+//go:generate go tool counterfeiter -generate
+
+//counterfeiter:generate -o ../../fakes/session-store.go . SessionStore
 type SessionStore interface {
 	Create(ctx context.Context, session *models.Session) error
 	FindByTokenID(ctx context.Context, tokenID string) (*models.Session, error)
@@ -80,7 +83,7 @@ func (s *Service) Create(ctx context.Context, userID int64) (*models.Session, st
 		return nil, "", err
 	}
 
-	token, err := s.signJWT(session.UserID, session.TokenID, session.ExpiresAt)
+	token, err := s.SignJWT(session.UserID, session.TokenID, session.ExpiresAt)
 	if err != nil {
 		return nil, "", err
 	}
@@ -123,7 +126,7 @@ func (s *Service) Revoke(ctx context.Context, tokenID string) error {
 	return nil
 }
 
-func (s *Service) signJWT(userID int64, tokenID string, expiresAt time.Time) (string, error) {
+func (s *Service) SignJWT(userID int64, tokenID string, expiresAt time.Time) (string, error) {
 	claims := &Claims{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
