@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/tobyrushton/bexbox-pl/libs/db/models"
+	"github.com/tobyrushton/padel-stats/libs/db/models"
 	"github.com/uptrace/bun"
 )
 

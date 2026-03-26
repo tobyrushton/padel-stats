@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
-	"github.com/tobyrushton/bexbox-pl/cmd/migrate/migrations"
-	"github.com/tobyrushton/bexbox-pl/libs/config"
+	"github.com/tobyrushton/padel-stats/cmd/migrate/migrations"
+	"github.com/tobyrushton/padel-stats/libs/config"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
