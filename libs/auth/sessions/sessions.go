@@ -11,7 +11,6 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/tobyrushton/padel-stats/libs/db/models"
-	"github.com/uptrace/bun"
 )
 
 var (
@@ -27,16 +26,22 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+type SessionStore interface {
+	Create(ctx context.Context, session *models.Session) error
+	FindByTokenID(ctx context.Context, tokenID string) (*models.Session, error)
+	RevokeByTokenID(ctx context.Context, tokenID string, revokedAt time.Time) error
+}
+
 type Service struct {
-	db        *bun.DB
+	store     SessionStore
 	secret    []byte
 	issuer    string
 	sessionTT time.Duration
 }
 
-func NewService(db *bun.DB, secret, issuer string, sessionTTL time.Duration) (*Service, error) {
-	if db == nil {
-		return nil, errors.New("db is required")
+func NewService(store SessionStore, secret, issuer string, sessionTTL time.Duration) (*Service, error) {
+	if store == nil {
+		return nil, errors.New("session store is required")
 	}
 	if secret == "" {
 		return nil, errors.New("jwt secret is required")
@@ -49,7 +54,7 @@ func NewService(db *bun.DB, secret, issuer string, sessionTTL time.Duration) (*S
 	}
 
 	return &Service{
-		db:        db,
+		store:     store,
 		secret:    []byte(secret),
 		issuer:    issuer,
 		sessionTT: sessionTTL,
@@ -71,7 +76,7 @@ func (s *Service) Create(ctx context.Context, userID int64) (*models.Session, st
 		ExpiresAt: expiresAt,
 	}
 
-	if _, err := s.db.NewInsert().Model(session).Exec(ctx); err != nil {
+	if err := s.store.Create(ctx, session); err != nil {
 		return nil, "", err
 	}
 
@@ -89,12 +94,7 @@ func (s *Service) Validate(ctx context.Context, tokenString string) (*models.Ses
 		return nil, err
 	}
 
-	session := new(models.Session)
-	err = s.db.NewSelect().
-		Model(session).
-		Where("token_id = ?", claims.ID).
-		Limit(1).
-		Scan(ctx)
+	session, err := s.store.FindByTokenID(ctx, claims.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrSessionNotFound
@@ -115,13 +115,7 @@ func (s *Service) Validate(ctx context.Context, tokenString string) (*models.Ses
 
 func (s *Service) Revoke(ctx context.Context, tokenID string) error {
 	now := time.Now().UTC()
-	_, err := s.db.NewUpdate().
-		Model((*models.Session)(nil)).
-		Set("revoked_at = ?", now).
-		Set("updated_at = ?", now).
-		Where("token_id = ?", tokenID).
-		Where("revoked_at IS NULL").
-		Exec(ctx)
+	err := s.store.RevokeByTokenID(ctx, tokenID, now)
 	if err != nil {
 		return err
 	}
