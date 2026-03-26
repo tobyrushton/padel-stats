@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
+	"github.com/tobyrushton/bexbox-pl/cmd/migrate/migrations"
 	"github.com/tobyrushton/bexbox-pl/libs/config"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -15,8 +16,6 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 	"github.com/uptrace/bun/migrate"
 )
-
-var registeredMigrations = migrate.NewMigrations()
 
 type CLI struct {
 	Init        InitCmd        `cmd:"" help:"Create migration tables"`
@@ -54,39 +53,14 @@ type CreateTxSQLCmd struct {
 func main() {
 	migrator := newMigrator()
 	cli := CLI{}
-	ctx := kong.Parse(&cli)
+	ctx := kong.Parse(
+		&cli,
+		kong.BindTo(context.Background(), (*context.Context)(nil)),
+		kong.Bind(migrator),
+	)
 
-	err := runCommand(ctx.Command(), &cli, migrator)
+	err := ctx.Run()
 	ctx.FatalIfErrorf(err)
-}
-
-func runCommand(command string, cli *CLI, migrator *migrate.Migrator) error {
-	commandContext := context.Background()
-
-	switch command {
-	case "init":
-		return cli.Init.Run(commandContext, migrator)
-	case "migrate":
-		return cli.Migrate.Run(commandContext, migrator)
-	case "rollback":
-		return cli.Rollback.Run(commandContext, migrator)
-	case "lock":
-		return cli.Lock.Run(commandContext, migrator)
-	case "unlock":
-		return cli.Unlock.Run(commandContext, migrator)
-	case "create-go":
-		return cli.CreateGo.Run(commandContext, migrator)
-	case "create-sql":
-		return cli.CreateSQL.Run(commandContext, migrator)
-	case "create-tx-sql":
-		return cli.CreateTxSQL.Run(commandContext, migrator)
-	case "status":
-		return cli.Status.Run(commandContext, migrator)
-	case "mark-applied":
-		return cli.MarkApplied.Run(commandContext, migrator)
-	default:
-		return fmt.Errorf("unknown command: %s", command)
-	}
 }
 
 func newMigrator() *migrate.Migrator {
@@ -111,7 +85,7 @@ func newMigrator() *migrate.Migrator {
 		"Prefix": "example_",
 	}
 
-	return migrate.NewMigrator(db, registeredMigrations, migrate.WithTemplateData(templateData))
+	return migrate.NewMigrator(db, migrations.Migrations, migrate.WithTemplateData(templateData))
 }
 
 func (c *InitCmd) Run(ctx context.Context, migrator *migrate.Migrator) error {
