@@ -1,5 +1,5 @@
 {
-  "name": "bexbox-pl",
+  "name": "padel-stats",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -7,16 +7,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tobyrushton/bexbox-pl.git"
+    "url": "git+https://github.com/tobyrushton/padel-stats.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/tobyrushton/bexbox-pl/issues"
+    "url": "https://github.com/tobyrushton/padel-stats/issues"
   },
-  "homepage": "https://github.com/tobyrushton/bexbox-pl#readme",
+  "homepage": "https://github.com/tobyrushton/padel-stats#readme",
   "description": "",
   "dependencies": {
     "sst": "4.5.7"

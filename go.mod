@@ -1,4 +1,4 @@
-module github.com/tobyrushton/bexbox-pl
+module github.com/tobyrushton/padel-stats
 
 go 1.25.0
 
