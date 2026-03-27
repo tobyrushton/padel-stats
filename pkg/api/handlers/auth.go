@@ -29,6 +29,18 @@ func (h *AuthHandler) RegisterRoutes(r chi.Router) {
 	})
 }
 
+// Signup registers a new user and returns an auth token.
+// @Summary Sign up
+// @Description Register a new user account.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body auth.SignupInput true "Signup payload"
+// @Success 201 {object} auth.AuthResult
+// @Failure 400 {object} ErrorResponse
+// @Failure 409 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/signup [post]
 func (h *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 	var input auth.SignupInput
 	if err := decodeJSON(r, &input); err != nil {
@@ -45,6 +57,18 @@ func (h *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, result)
 }
 
+// Signin authenticates an existing user and returns an auth token.
+// @Summary Sign in
+// @Description Authenticate with username and password.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body auth.SigninInput true "Signin payload"
+// @Success 200 {object} auth.AuthResult
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/signin [post]
 func (h *AuthHandler) Signin(w http.ResponseWriter, r *http.Request) {
 	var input auth.SigninInput
 	if err := decodeJSON(r, &input); err != nil {

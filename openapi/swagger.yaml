@@ -1,0 +1,128 @@
+basePath: /
+definitions:
+  auth.AuthResult:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/auth.User'
+    type: object
+  auth.SigninInput:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  auth.SignupInput:
+    properties:
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  auth.User:
+    properties:
+      createdAt:
+        format: date-time
+        type: string
+      firstName:
+        type: string
+      id:
+        format: int64
+        type: integer
+      lastName:
+        type: string
+      updatedAt:
+        format: date-time
+        type: string
+      username:
+        type: string
+    type: object
+  handlers.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API for authentication and padel stats workflows.
+  title: Padel Stats API
+  version: "1.0"
+paths:
+  /auth/signin:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate with username and password.
+      parameters:
+      - description: Signin payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.SigninInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.AuthResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Sign in
+      tags:
+      - auth
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user account.
+      parameters:
+      - description: Signup payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.SignupInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/auth.AuthResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Sign up
+      tags:
+      - auth
+schemes:
+- https
+- http
+swagger: "2.0"
