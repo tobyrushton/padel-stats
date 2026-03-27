@@ -3,21 +3,19 @@ package auth
 import (
 	"context"
 	"errors"
-
-	"github.com/tobyrushton/padel-stats/libs/db/models"
 )
 
 //go:generate go tool counterfeiter -generate
 
 //counterfeiter:generate -o ../fakes/user-repository.go . UserRepository
 type UserRepository interface {
-	CreateUser(ctx context.Context, user *models.User) error
-	FindUserByUsername(ctx context.Context, username string) (*models.User, error)
+	CreateUser(ctx context.Context, user *UserRecord) error
+	FindUserByUsername(ctx context.Context, username string) (*UserRecord, error)
 }
 
 //counterfeiter:generate -o ../fakes/auth-session-service.go . SessionService
 type SessionService interface {
-	Create(ctx context.Context, userID int64) (*models.Session, string, error)
+	Create(ctx context.Context, userID int64) (string, error)
 }
 
 type Service struct {
@@ -39,30 +37,30 @@ func NewService(userRepo UserRepository, sessionSvc SessionService) (*Service, e
 	}, nil
 }
 
-func (s *Service) Signup(ctx context.Context, input *SignupInput) (*models.User, string, error) {
+func (s *Service) Signup(ctx context.Context, input *SignupInput) (*AuthResult, error) {
 	if err := input.Validate(); err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	// Check if user exists
 	_, err := s.userRepo.FindUserByUsername(ctx, input.Username)
 	if err == nil {
 		// User exists
-		return nil, "", ErrUserExists
+		return nil, ErrUserExists
 	}
 	if err != ErrUserNotFound {
 		// Some other error occurred
-		return nil, "", err
+		return nil, err
 	}
 
 	// Hash password
 	hashedPassword, err := hashPassword(input.Password)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	// Create user
-	user := &models.User{
+	user := &UserRecord{
 		FirstName:      input.FirstName,
 		LastName:       input.LastName,
 		Username:       input.Username,
@@ -70,42 +68,42 @@ func (s *Service) Signup(ctx context.Context, input *SignupInput) (*models.User,
 	}
 
 	if err := s.userRepo.CreateUser(ctx, user); err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	// Create session
-	_, token, err := s.sessionSvc.Create(ctx, user.ID)
+	token, err := s.sessionSvc.Create(ctx, user.ID)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
-	return user, token, nil
+	return &AuthResult{User: userFromRecord(user), Token: token}, nil
 }
 
-func (s *Service) Signin(ctx context.Context, input *SigninInput) (*models.User, string, error) {
+func (s *Service) Signin(ctx context.Context, input *SigninInput) (*AuthResult, error) {
 	if err := input.Validate(); err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	// Find user
 	user, err := s.userRepo.FindUserByUsername(ctx, input.Username)
 	if err != nil {
 		if err == ErrUserNotFound {
-			return nil, "", ErrInvalidPassword // Don't leak username existence
+			return nil, ErrInvalidPassword // Don't leak username existence
 		}
-		return nil, "", err
+		return nil, err
 	}
 
 	// Verify password
 	if !verifyPassword(user.HashedPassword, input.Password) {
-		return nil, "", ErrInvalidPassword
+		return nil, ErrInvalidPassword
 	}
 
 	// Create session
-	_, token, err := s.sessionSvc.Create(ctx, user.ID)
+	token, err := s.sessionSvc.Create(ctx, user.ID)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
-	return user, token, nil
+	return &AuthResult{User: userFromRecord(user), Token: token}, nil
 }

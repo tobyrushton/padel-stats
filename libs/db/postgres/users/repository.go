@@ -22,15 +22,32 @@ func NewRepository(db *bun.DB) (*Repository, error) {
 	return &Repository{db: db}, nil
 }
 
-func (r *Repository) CreateUser(ctx context.Context, user *models.User) error {
-	_, err := r.db.NewInsert().Model(user).Exec(ctx)
+func (r *Repository) CreateUser(ctx context.Context, user *auth.UserRecord) error {
+	model := &models.User{
+		ID:             user.ID,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		Username:       user.Username,
+		HashedPassword: user.HashedPassword,
+		CreatedAt:      user.CreatedAt,
+		UpdatedAt:      user.UpdatedAt,
+	}
+
+	_, err := r.db.NewInsert().Model(model).Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	user.ID = model.ID
+	user.CreatedAt = model.CreatedAt
+	user.UpdatedAt = model.UpdatedAt
 	return err
 }
 
-func (r *Repository) FindUserByUsername(ctx context.Context, username string) (*models.User, error) {
-	user := new(models.User)
+func (r *Repository) FindUserByUsername(ctx context.Context, username string) (*auth.UserRecord, error) {
+	model := new(models.User)
 	err := r.db.NewSelect().
-		Model(user).
+		Model(model).
 		Where("username = ?", username).
 		Limit(1).
 		Scan(ctx)
@@ -41,5 +58,13 @@ func (r *Repository) FindUserByUsername(ctx context.Context, username string) (*
 		return nil, err
 	}
 
-	return user, nil
+	return &auth.UserRecord{
+		ID:             model.ID,
+		FirstName:      model.FirstName,
+		LastName:       model.LastName,
+		Username:       model.Username,
+		HashedPassword: model.HashedPassword,
+		CreatedAt:      model.CreatedAt,
+		UpdatedAt:      model.UpdatedAt,
+	}, nil
 }

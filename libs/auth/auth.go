@@ -26,18 +26,6 @@ const (
 
 var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{3,32}$`)
 
-type SignupInput struct {
-	FirstName string
-	LastName  string
-	Username  string
-	Password  string
-}
-
-type SigninInput struct {
-	Username string
-	Password string
-}
-
 func (in *SignupInput) Validate() error {
 	if in.FirstName == "" {
 		return ErrInvalidFirstName

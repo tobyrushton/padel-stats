@@ -6,15 +6,14 @@ import (
 	"sync"
 
 	"github.com/tobyrushton/padel-stats/libs/auth"
-	"github.com/tobyrushton/padel-stats/libs/db/models"
 )
 
 type FakeUserRepository struct {
-	CreateUserStub        func(context.Context, *models.User) error
+	CreateUserStub        func(context.Context, *auth.UserRecord) error
 	createUserMutex       sync.RWMutex
 	createUserArgsForCall []struct {
 		arg1 context.Context
-		arg2 *models.User
+		arg2 *auth.UserRecord
 	}
 	createUserReturns struct {
 		result1 error
@@ -22,30 +21,30 @@ type FakeUserRepository struct {
 	createUserReturnsOnCall map[int]struct {
 		result1 error
 	}
-	FindUserByUsernameStub        func(context.Context, string) (*models.User, error)
+	FindUserByUsernameStub        func(context.Context, string) (*auth.UserRecord, error)
 	findUserByUsernameMutex       sync.RWMutex
 	findUserByUsernameArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
 	}
 	findUserByUsernameReturns struct {
-		result1 *models.User
+		result1 *auth.UserRecord
 		result2 error
 	}
 	findUserByUsernameReturnsOnCall map[int]struct {
-		result1 *models.User
+		result1 *auth.UserRecord
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeUserRepository) CreateUser(arg1 context.Context, arg2 *models.User) error {
+func (fake *FakeUserRepository) CreateUser(arg1 context.Context, arg2 *auth.UserRecord) error {
 	fake.createUserMutex.Lock()
 	ret, specificReturn := fake.createUserReturnsOnCall[len(fake.createUserArgsForCall)]
 	fake.createUserArgsForCall = append(fake.createUserArgsForCall, struct {
 		arg1 context.Context
-		arg2 *models.User
+		arg2 *auth.UserRecord
 	}{arg1, arg2})
 	stub := fake.CreateUserStub
 	fakeReturns := fake.createUserReturns
@@ -66,13 +65,13 @@ func (fake *FakeUserRepository) CreateUserCallCount() int {
 	return len(fake.createUserArgsForCall)
 }
 
-func (fake *FakeUserRepository) CreateUserCalls(stub func(context.Context, *models.User) error) {
+func (fake *FakeUserRepository) CreateUserCalls(stub func(context.Context, *auth.UserRecord) error) {
 	fake.createUserMutex.Lock()
 	defer fake.createUserMutex.Unlock()
 	fake.CreateUserStub = stub
 }
 
-func (fake *FakeUserRepository) CreateUserArgsForCall(i int) (context.Context, *models.User) {
+func (fake *FakeUserRepository) CreateUserArgsForCall(i int) (context.Context, *auth.UserRecord) {
 	fake.createUserMutex.RLock()
 	defer fake.createUserMutex.RUnlock()
 	argsForCall := fake.createUserArgsForCall[i]
@@ -102,7 +101,7 @@ func (fake *FakeUserRepository) CreateUserReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeUserRepository) FindUserByUsername(arg1 context.Context, arg2 string) (*models.User, error) {
+func (fake *FakeUserRepository) FindUserByUsername(arg1 context.Context, arg2 string) (*auth.UserRecord, error) {
 	fake.findUserByUsernameMutex.Lock()
 	ret, specificReturn := fake.findUserByUsernameReturnsOnCall[len(fake.findUserByUsernameArgsForCall)]
 	fake.findUserByUsernameArgsForCall = append(fake.findUserByUsernameArgsForCall, struct {
@@ -128,7 +127,7 @@ func (fake *FakeUserRepository) FindUserByUsernameCallCount() int {
 	return len(fake.findUserByUsernameArgsForCall)
 }
 
-func (fake *FakeUserRepository) FindUserByUsernameCalls(stub func(context.Context, string) (*models.User, error)) {
+func (fake *FakeUserRepository) FindUserByUsernameCalls(stub func(context.Context, string) (*auth.UserRecord, error)) {
 	fake.findUserByUsernameMutex.Lock()
 	defer fake.findUserByUsernameMutex.Unlock()
 	fake.FindUserByUsernameStub = stub
@@ -141,28 +140,28 @@ func (fake *FakeUserRepository) FindUserByUsernameArgsForCall(i int) (context.Co
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeUserRepository) FindUserByUsernameReturns(result1 *models.User, result2 error) {
+func (fake *FakeUserRepository) FindUserByUsernameReturns(result1 *auth.UserRecord, result2 error) {
 	fake.findUserByUsernameMutex.Lock()
 	defer fake.findUserByUsernameMutex.Unlock()
 	fake.FindUserByUsernameStub = nil
 	fake.findUserByUsernameReturns = struct {
-		result1 *models.User
+		result1 *auth.UserRecord
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeUserRepository) FindUserByUsernameReturnsOnCall(i int, result1 *models.User, result2 error) {
+func (fake *FakeUserRepository) FindUserByUsernameReturnsOnCall(i int, result1 *auth.UserRecord, result2 error) {
 	fake.findUserByUsernameMutex.Lock()
 	defer fake.findUserByUsernameMutex.Unlock()
 	fake.FindUserByUsernameStub = nil
 	if fake.findUserByUsernameReturnsOnCall == nil {
 		fake.findUserByUsernameReturnsOnCall = make(map[int]struct {
-			result1 *models.User
+			result1 *auth.UserRecord
 			result2 error
 		})
 	}
 	fake.findUserByUsernameReturnsOnCall[i] = struct {
-		result1 *models.User
+		result1 *auth.UserRecord
 		result2 error
 	}{result1, result2}
 }

@@ -6,31 +6,28 @@ import (
 	"sync"
 
 	"github.com/tobyrushton/padel-stats/libs/auth"
-	"github.com/tobyrushton/padel-stats/libs/db/models"
 )
 
 type FakeSessionService struct {
-	CreateStub        func(context.Context, int64) (*models.Session, string, error)
+	CreateStub        func(context.Context, int64) (string, error)
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
 		arg1 context.Context
 		arg2 int64
 	}
 	createReturns struct {
-		result1 *models.Session
-		result2 string
-		result3 error
+		result1 string
+		result2 error
 	}
 	createReturnsOnCall map[int]struct {
-		result1 *models.Session
-		result2 string
-		result3 error
+		result1 string
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeSessionService) Create(arg1 context.Context, arg2 int64) (*models.Session, string, error) {
+func (fake *FakeSessionService) Create(arg1 context.Context, arg2 int64) (string, error) {
 	fake.createMutex.Lock()
 	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
 	fake.createArgsForCall = append(fake.createArgsForCall, struct {
@@ -45,9 +42,9 @@ func (fake *FakeSessionService) Create(arg1 context.Context, arg2 int64) (*model
 		return stub(arg1, arg2)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2, ret.result3
+		return ret.result1, ret.result2
 	}
-	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeSessionService) CreateCallCount() int {
@@ -56,7 +53,7 @@ func (fake *FakeSessionService) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
-func (fake *FakeSessionService) CreateCalls(stub func(context.Context, int64) (*models.Session, string, error)) {
+func (fake *FakeSessionService) CreateCalls(stub func(context.Context, int64) (string, error)) {
 	fake.createMutex.Lock()
 	defer fake.createMutex.Unlock()
 	fake.CreateStub = stub
@@ -69,33 +66,30 @@ func (fake *FakeSessionService) CreateArgsForCall(i int) (context.Context, int64
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeSessionService) CreateReturns(result1 *models.Session, result2 string, result3 error) {
+func (fake *FakeSessionService) CreateReturns(result1 string, result2 error) {
 	fake.createMutex.Lock()
 	defer fake.createMutex.Unlock()
 	fake.CreateStub = nil
 	fake.createReturns = struct {
-		result1 *models.Session
-		result2 string
-		result3 error
-	}{result1, result2, result3}
+		result1 string
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeSessionService) CreateReturnsOnCall(i int, result1 *models.Session, result2 string, result3 error) {
+func (fake *FakeSessionService) CreateReturnsOnCall(i int, result1 string, result2 error) {
 	fake.createMutex.Lock()
 	defer fake.createMutex.Unlock()
 	fake.CreateStub = nil
 	if fake.createReturnsOnCall == nil {
 		fake.createReturnsOnCall = make(map[int]struct {
-			result1 *models.Session
-			result2 string
-			result3 error
+			result1 string
+			result2 error
 		})
 	}
 	fake.createReturnsOnCall[i] = struct {
-		result1 *models.Session
-		result2 string
-		result3 error
-	}{result1, result2, result3}
+		result1 string
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeSessionService) Invocations() map[string][][]interface{} {
