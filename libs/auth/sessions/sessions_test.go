@@ -110,12 +110,10 @@ func (suite *ServiceTestSuite) TestCreate_Success() {
 		return nil
 	}
 
-	session, token, err := suite.service.Create(suite.ctx, userID)
+	token, err := suite.service.Create(suite.ctx, userID)
 
 	assert.NoError(suite.T(), err)
-	assert.NotNil(suite.T(), session)
 	assert.NotEmpty(suite.T(), token)
-	assert.Equal(suite.T(), userID, session.UserID)
 	assert.Equal(suite.T(), 1, suite.store.CreateCallCount())
 
 	// Verify the session was passed correctly
@@ -133,10 +131,9 @@ func (suite *ServiceTestSuite) TestCreate_StoreError() {
 		return expectedErr
 	}
 
-	session, token, err := suite.service.Create(suite.ctx, userID)
+	token, err := suite.service.Create(suite.ctx, userID)
 
 	assert.Error(suite.T(), err)
-	assert.Nil(suite.T(), session)
 	assert.Empty(suite.T(), token)
 	assert.Equal(suite.T(), expectedErr, err)
 }
@@ -150,14 +147,13 @@ func (suite *ServiceTestSuite) TestCreate_TokenGenerated() {
 		return nil
 	}
 
-	session, token, err := suite.service.Create(suite.ctx, userID)
+	token, err := suite.service.Create(suite.ctx, userID)
 
 	assert.NoError(suite.T(), err)
 	assert.NotEmpty(suite.T(), token)
 	assert.NotEmpty(suite.T(), tokenID)
 	// Token should be a valid JWT
 	assert.Contains(suite.T(), token, ".")
-	assert.Equal(suite.T(), session.TokenID, tokenID)
 }
 
 // Validate tests

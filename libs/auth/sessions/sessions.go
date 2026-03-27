@@ -64,10 +64,10 @@ func NewService(store SessionStore, secret, issuer string, sessionTTL time.Durat
 	}, nil
 }
 
-func (s *Service) Create(ctx context.Context, userID int64) (*models.Session, string, error) {
+func (s *Service) Create(ctx context.Context, userID int64) (string, error) {
 	tokenID, err := newTokenID()
 	if err != nil {
-		return nil, "", err
+		return "", err
 	}
 
 	now := time.Now().UTC()
@@ -80,15 +80,15 @@ func (s *Service) Create(ctx context.Context, userID int64) (*models.Session, st
 	}
 
 	if err := s.store.Create(ctx, session); err != nil {
-		return nil, "", err
+		return "", err
 	}
 
 	token, err := s.SignJWT(session.UserID, session.TokenID, session.ExpiresAt)
 	if err != nil {
-		return nil, "", err
+		return "", err
 	}
 
-	return session, token, nil
+	return token, nil
 }
 
 func (s *Service) Validate(ctx context.Context, tokenString string) (*models.Session, error) {

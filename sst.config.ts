@@ -23,5 +23,14 @@ export default $config({
         connectionString: bexboxPL.connectionUri,
       }
     });
+
+    const api = new sst.aws.ApiGatewayV2("API", {
+      link: [db],
+    })
+
+    api.route("$default", {
+      handler: "pkg/api/",
+      runtime: "go",
+    })
   },
 });
