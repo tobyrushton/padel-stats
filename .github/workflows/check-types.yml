@@ -1,0 +1,42 @@
+name: Check Type Generation
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-types:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Run type generation
+        run: make gen
+      
+      - name: Check for uncommitted changes
+        run: |
+          if git diff --quiet; then
+            echo "✓ Type generation is up to date"
+          else
+            echo "✗ Generated files are out of date"
+            echo ""
+            echo "The following files need to be regenerated:"
+            git diff --name-only
+            echo ""
+            echo "Please run 'make gen' and commit the changes."
+            exit 1
+          fi

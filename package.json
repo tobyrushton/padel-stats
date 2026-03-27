@@ -22,6 +22,8 @@
     "sst": "4.5.7"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.161"
+    "@types/aws-lambda": "8.10.161",
+    "openapi-typescript": "^7.13.0",
+    "swagger2openapi": "^7.0.8"
   }
 }
