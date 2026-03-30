@@ -81,6 +81,143 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/handlers.ErrorResponse"
+  /games:
+    post:
+      description: Create a game with two teams of two players and a final score.
+      tags:
+        - games
+      summary: Create game
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/games.CreateGameInput"
+        description: Create game payload
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/games.Game"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+  "/games/{gameID}":
+    get:
+      description: Retrieve a game by its identifier.
+      tags:
+        - games
+      summary: Get game
+      parameters:
+        - description: Game ID
+          name: gameID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/games.Game"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+    delete:
+      description: Delete a game by its identifier.
+      tags:
+        - games
+      summary: Delete game
+      parameters:
+        - description: Game ID
+          name: gameID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+  "/players/{playerID}/games":
+    get:
+      description: Retrieve all games where the player participated.
+      tags:
+        - games
+      summary: List player games
+      parameters:
+        - description: Player ID
+          name: playerID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/games.Game"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
 servers:
   - url: /
 components:
@@ -126,6 +263,85 @@ components:
         updatedAt:
           type: string
           format: date-time
+        username:
+          type: string
+    games.CreateGameInput:
+      type: object
+      properties:
+        playedAt:
+          type: string
+          format: date-time
+        seasonId:
+          type: integer
+          format: int64
+        team1Player1Id:
+          type: integer
+          format: int64
+        team1Player2Id:
+          type: integer
+          format: int64
+        team1Score:
+          type: integer
+        team2Player1Id:
+          type: integer
+          format: int64
+        team2Player2Id:
+          type: integer
+          format: int64
+        team2Score:
+          type: integer
+    games.Game:
+      type: object
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+        id:
+          type: integer
+          format: int64
+        playedAt:
+          type: string
+          format: date-time
+        seasonId:
+          type: integer
+          format: int64
+        team1Player1:
+          $ref: "#/components/schemas/games.Player"
+        team1Player1Id:
+          type: integer
+          format: int64
+        team1Player2:
+          $ref: "#/components/schemas/games.Player"
+        team1Player2Id:
+          type: integer
+          format: int64
+        team1Score:
+          type: integer
+        team2Player1:
+          $ref: "#/components/schemas/games.Player"
+        team2Player1Id:
+          type: integer
+          format: int64
+        team2Player2:
+          $ref: "#/components/schemas/games.Player"
+        team2Player2Id:
+          type: integer
+          format: int64
+        team2Score:
+          type: integer
+        updatedAt:
+          type: string
+          format: date-time
+    games.Player:
+      type: object
+      properties:
+        firstName:
+          type: string
+        id:
+          type: integer
+          format: int64
+        lastName:
+          type: string
         username:
           type: string
     handlers.ErrorResponse:

@@ -115,6 +115,182 @@
                     }
                 }
             }
+        },
+        "/games": {
+            "post": {
+                "description": "Create a game with two teams of two players and a final score.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "Create game",
+                "parameters": [
+                    {
+                        "description": "Create game payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/games.CreateGameInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/games.Game"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/{gameID}": {
+            "get": {
+                "description": "Retrieve a game by its identifier.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "Get game",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Game ID",
+                        "name": "gameID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/games.Game"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a game by its identifier.",
+                "tags": [
+                    "games"
+                ],
+                "summary": "Delete game",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Game ID",
+                        "name": "gameID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/players/{playerID}/games": {
+            "get": {
+                "description": "Retrieve all games where the player participated.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "List player games",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Player ID",
+                        "name": "playerID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/games.Game"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -177,6 +353,118 @@
                 "updatedAt": {
                     "type": "string",
                     "format": "date-time"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "games.CreateGameInput": {
+            "type": "object",
+            "properties": {
+                "playedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "seasonId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "team1Player1Id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "team1Player2Id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "team1Score": {
+                    "type": "integer"
+                },
+                "team2Player1Id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "team2Player2Id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "team2Score": {
+                    "type": "integer"
+                }
+            }
+        },
+        "games.Game": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "playedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "seasonId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "team1Player1": {
+                    "$ref": "#/definitions/games.Player"
+                },
+                "team1Player1Id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "team1Player2": {
+                    "$ref": "#/definitions/games.Player"
+                },
+                "team1Player2Id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "team1Score": {
+                    "type": "integer"
+                },
+                "team2Player1": {
+                    "$ref": "#/definitions/games.Player"
+                },
+                "team2Player1Id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "team2Player2": {
+                    "$ref": "#/definitions/games.Player"
+                },
+                "team2Player2Id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "team2Score": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }
+        },
+        "games.Player": {
+            "type": "object",
+            "properties": {
+                "firstName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "lastName": {
+                    "type": "string"
                 },
                 "username": {
                     "type": "string"

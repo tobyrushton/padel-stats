@@ -43,6 +43,85 @@ definitions:
       username:
         type: string
     type: object
+  games.CreateGameInput:
+    properties:
+      playedAt:
+        format: date-time
+        type: string
+      seasonId:
+        format: int64
+        type: integer
+      team1Player1Id:
+        format: int64
+        type: integer
+      team1Player2Id:
+        format: int64
+        type: integer
+      team1Score:
+        type: integer
+      team2Player1Id:
+        format: int64
+        type: integer
+      team2Player2Id:
+        format: int64
+        type: integer
+      team2Score:
+        type: integer
+    type: object
+  games.Game:
+    properties:
+      createdAt:
+        format: date-time
+        type: string
+      id:
+        format: int64
+        type: integer
+      playedAt:
+        format: date-time
+        type: string
+      seasonId:
+        format: int64
+        type: integer
+      team1Player1:
+        $ref: '#/definitions/games.Player'
+      team1Player1Id:
+        format: int64
+        type: integer
+      team1Player2:
+        $ref: '#/definitions/games.Player'
+      team1Player2Id:
+        format: int64
+        type: integer
+      team1Score:
+        type: integer
+      team2Player1:
+        $ref: '#/definitions/games.Player'
+      team2Player1Id:
+        format: int64
+        type: integer
+      team2Player2:
+        $ref: '#/definitions/games.Player'
+      team2Player2Id:
+        format: int64
+        type: integer
+      team2Score:
+        type: integer
+      updatedAt:
+        format: date-time
+        type: string
+    type: object
+  games.Player:
+    properties:
+      firstName:
+        type: string
+      id:
+        format: int64
+        type: integer
+      lastName:
+        type: string
+      username:
+        type: string
+    type: object
   handlers.ErrorResponse:
     properties:
       error:
@@ -122,6 +201,122 @@ paths:
       summary: Sign up
       tags:
       - auth
+  /games:
+    post:
+      consumes:
+      - application/json
+      description: Create a game with two teams of two players and a final score.
+      parameters:
+      - description: Create game payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/games.CreateGameInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/games.Game'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Create game
+      tags:
+      - games
+  /games/{gameID}:
+    delete:
+      description: Delete a game by its identifier.
+      parameters:
+      - description: Game ID
+        in: path
+        name: gameID
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Delete game
+      tags:
+      - games
+    get:
+      description: Retrieve a game by its identifier.
+      parameters:
+      - description: Game ID
+        in: path
+        name: gameID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/games.Game'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get game
+      tags:
+      - games
+  /players/{playerID}/games:
+    get:
+      description: Retrieve all games where the player participated.
+      parameters:
+      - description: Player ID
+        in: path
+        name: playerID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/games.Game'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: List player games
+      tags:
+      - games
 schemes:
 - https
 - http
