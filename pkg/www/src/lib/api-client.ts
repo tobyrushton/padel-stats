@@ -7,10 +7,17 @@ type JsonContent<T> = T extends { content: { "application/json": infer TJson } }
 
 type SigninOperation = NonNullable<paths["/auth/signin"]["post"]>
 type SignupOperation = NonNullable<paths["/auth/signup"]["post"]>
+type CreateGameOperation = NonNullable<paths["/games"]["post"]>
+type GetGameByIDOperation = NonNullable<paths["/games/{gameID}"]["get"]>
+type DeleteGameByIDOperation = NonNullable<paths["/games/{gameID}"]["delete"]>
+type ListGamesForPlayerOperation = NonNullable<paths["/players/{playerID}/games"]["get"]>
 
 export type SigninInput = JsonContent<SigninOperation["requestBody"]>
 export type SignupInput = JsonContent<SignupOperation["requestBody"]>
 export type AuthResult = JsonContent<SigninOperation["responses"][200]>
+export type CreateGameInput = JsonContent<CreateGameOperation["requestBody"]>
+export type Game = JsonContent<GetGameByIDOperation["responses"][200]>
+export type PlayerGames = JsonContent<ListGamesForPlayerOperation["responses"][200]>
 export type ErrorResponse = components["schemas"]["handlers.ErrorResponse"]
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
@@ -71,6 +78,39 @@ export class ApiClient {
       method: "POST",
       body: input,
       expectedStatus: [201],
+    })
+  }
+
+  async createGame(input: CreateGameInput): Promise<Game> {
+    return this.request<CreateGameInput, Game, ErrorResponse>({
+      path: "/games",
+      method: "POST",
+      body: input,
+      expectedStatus: [201],
+    })
+  }
+
+  async getGameById(gameID: number): Promise<Game> {
+    return this.request<undefined, Game, ErrorResponse>({
+      path: `/games/${gameID}`,
+      method: "GET",
+      expectedStatus: [200],
+    })
+  }
+
+  async listGamesForPlayer(playerID: number): Promise<PlayerGames> {
+    return this.request<undefined, PlayerGames, ErrorResponse>({
+      path: `/players/${playerID}/games`,
+      method: "GET",
+      expectedStatus: [200],
+    })
+  }
+
+  async deleteGame(gameID: number): Promise<void> {
+    await this.request<undefined, void, ErrorResponse>({
+      path: `/games/${gameID}`,
+      method: "DELETE",
+      expectedStatus: [204],
     })
   }
 
