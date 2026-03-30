@@ -251,6 +251,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/players/search": {
+            "get": {
+                "description": "Search players by username, first name, or last name. Returns default player list when query is empty.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "players"
+                ],
+                "summary": "Search players",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Optional player search query",
+                        "name": "query",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.SearchPlayersResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/players/{playerID}/games": {
             "get": {
                 "description": "Retrieve all games where the player participated.",
@@ -305,6 +345,17 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/auth.User"
+                }
+            }
+        },
+        "auth.SearchPlayersResult": {
+            "type": "object",
+            "properties": {
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/auth.User"
+                    }
                 }
             }
         },

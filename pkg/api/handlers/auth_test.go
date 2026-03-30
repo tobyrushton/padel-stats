@@ -14,8 +14,9 @@ import (
 )
 
 type fakeAuthService struct {
-	signupFn func(context.Context, *auth.SignupInput) (*auth.AuthResult, error)
-	signinFn func(context.Context, *auth.SigninInput) (*auth.AuthResult, error)
+	signupFn        func(context.Context, *auth.SignupInput) (*auth.AuthResult, error)
+	signinFn        func(context.Context, *auth.SigninInput) (*auth.AuthResult, error)
+	searchPlayersFn func(context.Context, string) (*auth.SearchPlayersResult, error)
 }
 
 func (f *fakeAuthService) Signup(ctx context.Context, input *auth.SignupInput) (*auth.AuthResult, error) {
@@ -30,6 +31,13 @@ func (f *fakeAuthService) Signin(ctx context.Context, input *auth.SigninInput) (
 		return nil, errors.New("signin function not configured")
 	}
 	return f.signinFn(ctx, input)
+}
+
+func (f *fakeAuthService) SearchPlayers(ctx context.Context, query string) (*auth.SearchPlayersResult, error) {
+	if f.searchPlayersFn == nil {
+		return nil, errors.New("search players function not configured")
+	}
+	return f.searchPlayersFn(ctx, query)
 }
 
 func TestSignupSuccess(t *testing.T) {
@@ -90,6 +98,47 @@ func TestSigninBadBody(t *testing.T) {
 	h.Signin(w, r)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestSearchPlayersSuccess(t *testing.T) {
+	h := NewAuthHandler(&fakeAuthService{
+		searchPlayersFn: func(ctx context.Context, query string) (*auth.SearchPlayersResult, error) {
+			return &auth.SearchPlayersResult{
+				Players: []*auth.User{{ID: 1, Username: "jane", FirstName: "Jane", LastName: "Doe"}},
+			}, nil
+		},
+	})
+
+	r := httptest.NewRequest(http.MethodGet, "/players/search?query=ja", nil)
+	w := httptest.NewRecorder()
+
+	h.SearchPlayers(w, r)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var got auth.SearchPlayersResult
+	err := json.NewDecoder(w.Body).Decode(&got)
+	assert.NoError(t, err)
+	assert.Len(t, got.Players, 1)
+	assert.Equal(t, "jane", got.Players[0].Username)
+}
+
+func TestSearchPlayersWithoutQueryReturnsDefaultList(t *testing.T) {
+	h := NewAuthHandler(&fakeAuthService{
+		searchPlayersFn: func(ctx context.Context, query string) (*auth.SearchPlayersResult, error) {
+			assert.Equal(t, "", query)
+			return &auth.SearchPlayersResult{
+				Players: []*auth.User{{ID: 2, Username: "default-player"}},
+			}, nil
+		},
+	})
+
+	r := httptest.NewRequest(http.MethodGet, "/players/search", nil)
+	w := httptest.NewRecorder()
+
+	h.SearchPlayers(w, r)
+
+	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestHandleAuthErrorMappings(t *testing.T) {

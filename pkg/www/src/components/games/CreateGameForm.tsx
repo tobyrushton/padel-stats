@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,7 +9,9 @@ import {
   type CreateGameInput,
   type ErrorResponse,
   type Game,
+  type SearchPlayer,
 } from "@/lib/api-client"
+import PlayerSelector from "@/components/games/PlayerSelector"
 
 type CreateGameFormState = {
   team1Player1Id: string
@@ -156,11 +158,23 @@ export default function CreateGameForm({ apiBaseUrl, onCreated, focusSignal, onC
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const firstFieldRef = useRef<HTMLInputElement | null>(null)
 
-  useEffect(() => {
-    firstFieldRef.current?.focus()
-  }, [focusSignal])
+  const selectedPlayerIDs = [
+    parsePositiveInteger(form.team1Player1Id),
+    parsePositiveInteger(form.team1Player2Id),
+    parsePositiveInteger(form.team2Player1Id),
+    parsePositiveInteger(form.team2Player2Id),
+  ].filter((id): id is number => Boolean(id))
+
+  const selectPlayer = (field: keyof Pick<CreateGameFormState, "team1Player1Id" | "team1Player2Id" | "team2Player1Id" | "team2Player2Id">, player: SearchPlayer | null) => {
+    const playerID = player?.id
+    if (!playerID || !Number.isInteger(playerID) || playerID <= 0) {
+      handleChange(field, "")
+      return
+    }
+
+    handleChange(field, String(playerID))
+  }
 
   const handleChange = (field: keyof CreateGameFormState, value: string) => {
     setForm((current) => ({
@@ -203,58 +217,46 @@ export default function CreateGameForm({ apiBaseUrl, onCreated, focusSignal, onC
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="game-team1-player1-id">Team 1 Player 1 ID</Label>
-          <Input
-            ref={firstFieldRef}
-            id="game-team1-player1-id"
-            type="number"
-            min={1}
-            value={form.team1Player1Id}
-            onChange={(event) => handleChange("team1Player1Id", event.currentTarget.value)}
-            disabled={isSubmitting}
-            required
-          />
-        </div>
+        <PlayerSelector
+          apiBaseUrl={apiBaseUrl}
+          inputId="game-team1-player1-id"
+          label="Team 1 Player 1"
+          selectedPlayerId={form.team1Player1Id}
+          excludedPlayerIDs={selectedPlayerIDs.filter((id) => id !== parsePositiveInteger(form.team1Player1Id))}
+          onPlayerSelect={(player) => selectPlayer("team1Player1Id", player)}
+          disabled={isSubmitting}
+          focusSignal={focusSignal}
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="game-team1-player2-id">Team 1 Player 2 ID</Label>
-          <Input
-            id="game-team1-player2-id"
-            type="number"
-            min={1}
-            value={form.team1Player2Id}
-            onChange={(event) => handleChange("team1Player2Id", event.currentTarget.value)}
-            disabled={isSubmitting}
-            required
-          />
-        </div>
+        <PlayerSelector
+          apiBaseUrl={apiBaseUrl}
+          inputId="game-team1-player2-id"
+          label="Team 1 Player 2"
+          selectedPlayerId={form.team1Player2Id}
+          excludedPlayerIDs={selectedPlayerIDs.filter((id) => id !== parsePositiveInteger(form.team1Player2Id))}
+          onPlayerSelect={(player) => selectPlayer("team1Player2Id", player)}
+          disabled={isSubmitting}
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="game-team2-player1-id">Team 2 Player 1 ID</Label>
-          <Input
-            id="game-team2-player1-id"
-            type="number"
-            min={1}
-            value={form.team2Player1Id}
-            onChange={(event) => handleChange("team2Player1Id", event.currentTarget.value)}
-            disabled={isSubmitting}
-            required
-          />
-        </div>
+        <PlayerSelector
+          apiBaseUrl={apiBaseUrl}
+          inputId="game-team2-player1-id"
+          label="Team 2 Player 1"
+          selectedPlayerId={form.team2Player1Id}
+          excludedPlayerIDs={selectedPlayerIDs.filter((id) => id !== parsePositiveInteger(form.team2Player1Id))}
+          onPlayerSelect={(player) => selectPlayer("team2Player1Id", player)}
+          disabled={isSubmitting}
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="game-team2-player2-id">Team 2 Player 2 ID</Label>
-          <Input
-            id="game-team2-player2-id"
-            type="number"
-            min={1}
-            value={form.team2Player2Id}
-            onChange={(event) => handleChange("team2Player2Id", event.currentTarget.value)}
-            disabled={isSubmitting}
-            required
-          />
-        </div>
+        <PlayerSelector
+          apiBaseUrl={apiBaseUrl}
+          inputId="game-team2-player2-id"
+          label="Team 2 Player 2"
+          selectedPlayerId={form.team2Player2Id}
+          excludedPlayerIDs={selectedPlayerIDs.filter((id) => id !== parsePositiveInteger(form.team2Player2Id))}
+          onPlayerSelect={(player) => selectPlayer("team2Player2Id", player)}
+          disabled={isSubmitting}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

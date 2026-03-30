@@ -328,6 +328,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/players/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search players
+         * @description Search players by username, first name, or last name. Returns default player list when query is empty.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Optional player search query */
+                    query?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["auth.SearchPlayersResult"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["handlers.ErrorResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["handlers.ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/players/{playerID}/games": {
         parameters: {
             query?: never;
@@ -395,6 +455,9 @@ export interface components {
         "auth.AuthResult": {
             token?: string;
             user?: components["schemas"]["auth.User"];
+        };
+        "auth.SearchPlayersResult": {
+            players?: components["schemas"]["auth.User"][];
         };
         "auth.SigninInput": {
             password?: string;

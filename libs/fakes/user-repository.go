@@ -35,6 +35,20 @@ type FakeUserRepository struct {
 		result1 *auth.UserRecord
 		result2 error
 	}
+	SearchUsersByQueryStub        func(context.Context, string) ([]*auth.UserRecord, error)
+	searchUsersByQueryMutex       sync.RWMutex
+	searchUsersByQueryArgsForCall []struct {
+		arg1 context.Context
+		arg2 string
+	}
+	searchUsersByQueryReturns struct {
+		result1 []*auth.UserRecord
+		result2 error
+	}
+	searchUsersByQueryReturnsOnCall map[int]struct {
+		result1 []*auth.UserRecord
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -162,6 +176,71 @@ func (fake *FakeUserRepository) FindUserByUsernameReturnsOnCall(i int, result1 *
 	}
 	fake.findUserByUsernameReturnsOnCall[i] = struct {
 		result1 *auth.UserRecord
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeUserRepository) SearchUsersByQuery(arg1 context.Context, arg2 string) ([]*auth.UserRecord, error) {
+	fake.searchUsersByQueryMutex.Lock()
+	ret, specificReturn := fake.searchUsersByQueryReturnsOnCall[len(fake.searchUsersByQueryArgsForCall)]
+	fake.searchUsersByQueryArgsForCall = append(fake.searchUsersByQueryArgsForCall, struct {
+		arg1 context.Context
+		arg2 string
+	}{arg1, arg2})
+	stub := fake.SearchUsersByQueryStub
+	fakeReturns := fake.searchUsersByQueryReturns
+	fake.recordInvocation("SearchUsersByQuery", []interface{}{arg1, arg2})
+	fake.searchUsersByQueryMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeUserRepository) SearchUsersByQueryCallCount() int {
+	fake.searchUsersByQueryMutex.RLock()
+	defer fake.searchUsersByQueryMutex.RUnlock()
+	return len(fake.searchUsersByQueryArgsForCall)
+}
+
+func (fake *FakeUserRepository) SearchUsersByQueryCalls(stub func(context.Context, string) ([]*auth.UserRecord, error)) {
+	fake.searchUsersByQueryMutex.Lock()
+	defer fake.searchUsersByQueryMutex.Unlock()
+	fake.SearchUsersByQueryStub = stub
+}
+
+func (fake *FakeUserRepository) SearchUsersByQueryArgsForCall(i int) (context.Context, string) {
+	fake.searchUsersByQueryMutex.RLock()
+	defer fake.searchUsersByQueryMutex.RUnlock()
+	argsForCall := fake.searchUsersByQueryArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeUserRepository) SearchUsersByQueryReturns(result1 []*auth.UserRecord, result2 error) {
+	fake.searchUsersByQueryMutex.Lock()
+	defer fake.searchUsersByQueryMutex.Unlock()
+	fake.SearchUsersByQueryStub = nil
+	fake.searchUsersByQueryReturns = struct {
+		result1 []*auth.UserRecord
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeUserRepository) SearchUsersByQueryReturnsOnCall(i int, result1 []*auth.UserRecord, result2 error) {
+	fake.searchUsersByQueryMutex.Lock()
+	defer fake.searchUsersByQueryMutex.Unlock()
+	fake.SearchUsersByQueryStub = nil
+	if fake.searchUsersByQueryReturnsOnCall == nil {
+		fake.searchUsersByQueryReturnsOnCall = make(map[int]struct {
+			result1 []*auth.UserRecord
+			result2 error
+		})
+	}
+	fake.searchUsersByQueryReturnsOnCall[i] = struct {
+		result1 []*auth.UserRecord
 		result2 error
 	}{result1, result2}
 }

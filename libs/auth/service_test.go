@@ -149,6 +149,44 @@ func (suite *AuthServiceTestSuite) TestSignin_SessionError() {
 	assert.Nil(suite.T(), result)
 }
 
+func (suite *AuthServiceTestSuite) TestSearchPlayers_Success() {
+	suite.userRepo.SearchUsersByQueryStub = func(ctx context.Context, query string) ([]*auth.UserRecord, error) {
+		return []*auth.UserRecord{{
+			ID:        12,
+			FirstName: "Jane",
+			LastName:  "Doe",
+			Username:  "jane",
+		}}, nil
+	}
+
+	result, err := suite.service.SearchPlayers(suite.ctx, "ja")
+
+	assert.NoError(suite.T(), err)
+	assert.NotNil(suite.T(), result)
+	assert.Len(suite.T(), result.Players, 1)
+	assert.Equal(suite.T(), int64(12), result.Players[0].ID)
+	assert.Equal(suite.T(), "jane", result.Players[0].Username)
+}
+
+func (suite *AuthServiceTestSuite) TestSearchPlayers_EmptyQueryReturnsDefaultList() {
+	suite.userRepo.SearchUsersByQueryStub = func(ctx context.Context, query string) ([]*auth.UserRecord, error) {
+		assert.Equal(suite.T(), "", query)
+		return []*auth.UserRecord{{
+			ID:        2,
+			FirstName: "Default",
+			LastName:  "Player",
+			Username:  "default-player",
+		}}, nil
+	}
+
+	result, err := suite.service.SearchPlayers(suite.ctx, "   ")
+
+	assert.NoError(suite.T(), err)
+	assert.NotNil(suite.T(), result)
+	assert.Len(suite.T(), result.Players, 1)
+	assert.Equal(suite.T(), "default-player", result.Players[0].Username)
+}
+
 func TestAuthServiceTestSuite(t *testing.T) {
 	suite.Run(t, new(AuthServiceTestSuite))
 }

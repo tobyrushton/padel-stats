@@ -7,6 +7,13 @@ definitions:
       user:
         $ref: '#/definitions/auth.User'
     type: object
+  auth.SearchPlayersResult:
+    properties:
+      players:
+        items:
+          $ref: '#/definitions/auth.User'
+        type: array
+    type: object
   auth.SigninInput:
     properties:
       password:
@@ -317,6 +324,33 @@ paths:
       summary: List player games
       tags:
       - games
+  /players/search:
+    get:
+      description: Search players by username, first name, or last name. Returns default
+        player list when query is empty.
+      parameters:
+      - description: Optional player search query
+        in: query
+        name: query
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.SearchPlayersResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Search players
+      tags:
+      - players
 schemes:
 - https
 - http

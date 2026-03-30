@@ -11,6 +11,7 @@ type CreateGameOperation = NonNullable<paths["/games"]["post"]>
 type GetGameByIDOperation = NonNullable<paths["/games/{gameID}"]["get"]>
 type DeleteGameByIDOperation = NonNullable<paths["/games/{gameID}"]["delete"]>
 type ListGamesForPlayerOperation = NonNullable<paths["/players/{playerID}/games"]["get"]>
+type SearchPlayersOperation = NonNullable<paths["/players/search"]["get"]>
 
 export type SigninInput = JsonContent<SigninOperation["requestBody"]>
 export type SignupInput = JsonContent<SignupOperation["requestBody"]>
@@ -18,6 +19,8 @@ export type AuthResult = JsonContent<SigninOperation["responses"][200]>
 export type CreateGameInput = JsonContent<CreateGameOperation["requestBody"]>
 export type Game = JsonContent<GetGameByIDOperation["responses"][200]>
 export type PlayerGames = JsonContent<ListGamesForPlayerOperation["responses"][200]>
+export type SearchPlayer = components["schemas"]["auth.User"]
+export type SearchPlayersResult = JsonContent<SearchPlayersOperation["responses"][200]>
 export type ErrorResponse = components["schemas"]["handlers.ErrorResponse"]
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
@@ -111,6 +114,16 @@ export class ApiClient {
       path: `/games/${gameID}`,
       method: "DELETE",
       expectedStatus: [204],
+    })
+  }
+
+  async searchPlayers(query?: string): Promise<SearchPlayersResult> {
+    const queryString = query ? `?query=${encodeURIComponent(query)}` : ""
+
+    return this.request<undefined, SearchPlayersResult, ErrorResponse>({
+      path: `/players/search${queryString}`,
+      method: "GET",
+      expectedStatus: [200],
     })
   }
 

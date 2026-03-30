@@ -184,6 +184,38 @@ paths:
             "*/*":
               schema:
                 $ref: "#/components/schemas/handlers.ErrorResponse"
+  /players/search:
+    get:
+      description: Search players by username, first name, or last name. Returns
+        default player list when query is empty.
+      tags:
+        - players
+      summary: Search players
+      parameters:
+        - description: Optional player search query
+          name: query
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/auth.SearchPlayersResult"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
   "/players/{playerID}/games":
     get:
       description: Retrieve all games where the player participated.
@@ -229,6 +261,13 @@ components:
           type: string
         user:
           $ref: "#/components/schemas/auth.User"
+    auth.SearchPlayersResult:
+      type: object
+      properties:
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/auth.User"
     auth.SigninInput:
       type: object
       properties:

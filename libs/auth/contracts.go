@@ -16,6 +16,11 @@ type SigninInput struct {
 	Password string `json:"password"`
 }
 
+// SearchPlayersResult is the response payload for player search.
+type SearchPlayersResult struct {
+	Players []*User `json:"players"`
+}
+
 // User is an API-safe user contract for OpenAPI generation.
 type User struct {
 	ID        int64     `json:"id" format:"int64"`
