@@ -2,6 +2,7 @@
 import { Resource } from "sst"
 import "@/styles/global.css"
 import SignUpForm from "@/components/auth/SignUpForm"
+import Header from "@/components/site/Header"
 ---
 
 <html lang="en">
@@ -11,8 +12,9 @@ import SignUpForm from "@/components/auth/SignUpForm"
     <meta name="generator" content={Astro.generator} />
     <title>Sign Up | Padel Stats</title>
   </head>
-  <body>
-    <main class="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-10">
+  <body class="min-h-screen bg-background text-foreground">
+    <Header client:load />
+    <main class="mx-auto flex w-full max-w-6xl flex-1 items-center justify-center px-4 py-10">
       <SignUpForm client:load apiBaseUrl={Resource.API.url} />
     </main>
   </body>
