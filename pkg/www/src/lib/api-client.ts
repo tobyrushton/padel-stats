@@ -1,5 +1,5 @@
-import { Resource } from "sst"
 import type { components, paths } from "@/types/api"
+import { getAuthToken } from "./auth-token"
 
 type JsonContent<T> = T extends { content: { "application/json": infer TJson } }
   ? TJson
@@ -52,7 +52,8 @@ export class ApiClient {
     this.baseUrl = options.baseUrl ?? ""
     this.defaultHeaders = options.defaultHeaders
     this.getToken = options.getToken
-    this.fetchFn = options.fetchFn ?? fetch
+    const fetchImpl = options.fetchFn ?? globalThis.fetch
+    this.fetchFn = fetchImpl.bind(globalThis)
   }
 
   async signIn(input: SigninInput): Promise<AuthResult> {
@@ -153,6 +154,9 @@ export class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient({
-  baseUrl: Resource.API.url,
-})
+export function createApiClient(baseUrl?: string): ApiClient {
+  return new ApiClient({
+    baseUrl,
+    getToken: getAuthToken,
+  })
+}

@@ -29,8 +29,12 @@ export default $config({
     })
 
     api.route("$default", {
-      handler: "pkg/api/",
+      handler: "github.com/tobyrushton/padel-stats/pkg/api/",
       runtime: "go",
+      environment: {
+        JWT_SECRET: process.env.JWT_SECRET!,
+        JWT_ISSUER: process.env.JWT_ISSUER!,
+      }
     })
 
     const web = new sst.aws.Astro("www", {

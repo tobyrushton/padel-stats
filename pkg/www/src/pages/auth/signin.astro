@@ -1,0 +1,19 @@
+---
+import { Resource } from "sst"
+import "@/styles/global.css"
+import SignInForm from "@/components/auth/SignInForm"
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Sign In | Padel Stats</title>
+  </head>
+  <body>
+    <main class="mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-10">
+      <SignInForm client:load apiBaseUrl={Resource.API.url} />
+    </main>
+  </body>
+</html>
