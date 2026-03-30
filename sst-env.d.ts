@@ -6,9 +6,17 @@
 
 declare module "sst" {
   export interface Resource {
+    "API": {
+      "type": "sst.aws.ApiGatewayV2"
+      "url": string
+    }
     "NeonDB": {
       "connectionString": string
       "type": "sst.sst.Linkable"
+    }
+    "www": {
+      "type": "sst.aws.Astro"
+      "url": string
     }
   }
 }

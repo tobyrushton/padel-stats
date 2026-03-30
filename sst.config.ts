@@ -23,5 +23,23 @@ export default $config({
         connectionString: bexboxPL.connectionUri,
       }
     });
+
+    const api = new sst.aws.ApiGatewayV2("API", {
+      link: [db],
+    })
+
+    api.route("$default", {
+      handler: "github.com/tobyrushton/padel-stats/pkg/api/",
+      runtime: "go",
+      environment: {
+        JWT_SECRET: process.env.JWT_SECRET!,
+        JWT_ISSUER: process.env.JWT_ISSUER!,
+      }
+    })
+
+    const web = new sst.aws.Astro("www", {
+      link: [api],
+      path: "pkg/www",
+    })
   },
 });

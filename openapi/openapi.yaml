@@ -1,0 +1,135 @@
+openapi: 3.0.0
+info:
+  description: API for authentication and padel stats workflows.
+  title: Padel Stats API
+  contact: {}
+  version: "1.0"
+paths:
+  /auth/signin:
+    post:
+      description: Authenticate with username and password.
+      tags:
+        - auth
+      summary: Sign in
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/auth.SigninInput"
+        description: Signin payload
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/auth.AuthResult"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+  /auth/signup:
+    post:
+      description: Register a new user account.
+      tags:
+        - auth
+      summary: Sign up
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/auth.SignupInput"
+        description: Signup payload
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/auth.AuthResult"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+servers:
+  - url: /
+components:
+  schemas:
+    auth.AuthResult:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/auth.User"
+    auth.SigninInput:
+      type: object
+      properties:
+        password:
+          type: string
+        username:
+          type: string
+    auth.SignupInput:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        password:
+          type: string
+        username:
+          type: string
+    auth.User:
+      type: object
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+        firstName:
+          type: string
+        id:
+          type: integer
+          format: int64
+        lastName:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        username:
+          type: string
+    handlers.ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
