@@ -72,7 +72,7 @@ func (r *Repository) FindGameByID(ctx context.Context, gameID int64) (*gamedomai
 		Relation("Team1Player2").
 		Relation("Team2Player1").
 		Relation("Team2Player2").
-		Where("id = ?", gameID).
+		Where("g.id = ?", gameID).
 		Limit(1).
 		Scan(ctx)
 	if err != nil {

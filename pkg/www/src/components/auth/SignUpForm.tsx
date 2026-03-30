@@ -7,6 +7,7 @@ import {
   type SignupInput,
 } from "@/lib/api-client"
 import { setAuthToken } from "@/lib/auth-token"
+import { setAuthUser } from "@/lib/auth-user"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -74,6 +75,7 @@ export default function SignUpForm({ apiBaseUrl }: SignUpFormProps) {
       }
 
       setAuthToken(result.token)
+      setAuthUser(result.user)
       window.location.assign("/")
     } catch (error) {
       setErrorMessage(getSignUpErrorMessage(error))

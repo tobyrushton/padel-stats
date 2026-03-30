@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { clearAuthToken, getAuthToken } from "@/lib/auth-token"
+import { clearAuthUser } from "@/lib/auth-user"
 
 export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -24,6 +25,7 @@ export default function Header() {
 
   const handleLogout = () => {
     clearAuthToken()
+    clearAuthUser()
     setIsLoggedIn(false)
     window.location.assign("/auth/signin")
   }
@@ -37,9 +39,14 @@ export default function Header() {
 
         <nav className="flex items-center gap-2">
           {isLoggedIn ? (
-            <Button type="button" variant="outline" size="sm" onClick={handleLogout}>
-              Log out
-            </Button>
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <a href="/games">Games</a>
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={handleLogout}>
+                Log out
+              </Button>
+            </>
           ) : (
             <>
               <Button asChild variant="ghost" size="sm">

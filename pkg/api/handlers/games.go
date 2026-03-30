@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -82,6 +83,7 @@ func (h *GamesHandler) GetGameByID(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.gamesService.GetGameByID(r.Context(), gameID)
 	if err != nil {
+		fmt.Println(err)
 		handleGameError(w, err)
 		return
 	}
