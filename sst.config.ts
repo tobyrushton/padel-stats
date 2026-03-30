@@ -32,5 +32,10 @@ export default $config({
       handler: "pkg/api/",
       runtime: "go",
     })
+
+    const web = new sst.aws.Astro("www", {
+      link: [api],
+      path: "pkg/www",
+    })
   },
 });

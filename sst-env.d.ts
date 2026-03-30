@@ -14,6 +14,10 @@ declare module "sst" {
       "connectionString": string
       "type": "sst.sst.Linkable"
     }
+    "www": {
+      "type": "sst.aws.Astro"
+      "url": string
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />
