@@ -46,7 +46,6 @@ function formatPlayedAt(value: string): string {
 
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
-    timeStyle: "short",
   }).format(date)
 }
 
@@ -163,7 +162,7 @@ export default function GamesList({
                       Score: <span className="font-medium text-foreground">{game.team1Score}</span>-
                       <span className="font-medium text-foreground">{game.team2Score}</span>
                     </p>
-                    <p className="text-sm text-muted-foreground">Played: {formatPlayedAt(game.playedAt)}</p>
+                    <p className="text-sm text-muted-foreground">Played: {formatPlayedAt(game.playedAt as string)}</p>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -174,7 +173,7 @@ export default function GamesList({
                       type="button"
                       variant="destructive"
                       size="sm"
-                      onClick={() => void handleDelete(game.id)}
+                      onClick={() => void handleDelete(game.id as number)}
                       disabled={deletingGameID === game.id}
                     >
                       {deletingGameID === game.id ? "Deleting..." : "Delete"}

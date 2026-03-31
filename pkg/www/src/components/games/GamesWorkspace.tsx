@@ -4,8 +4,8 @@ import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { Game } from "@/lib/api-client"
 
-import CreateGameForm from "@/components/games/CreateGameForm"
-import GamesList from "@/components/games/GamesList"
+import CreateGameForm from "./CreateGameForm"
+import GamesList from "./GamesList"
 
 interface GamesWorkspaceProps {
   apiBaseUrl: string
