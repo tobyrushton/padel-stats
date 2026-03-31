@@ -59,7 +59,6 @@ export default function GamesList({
   const [games, setGames] = useState<Game[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [deletingGameID, setDeletingGameID] = useState<number | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -96,23 +95,6 @@ export default function GamesList({
       isMounted = false
     }
   }, [apiClient, refreshKey])
-
-  const handleDelete = async (gameID: number) => {
-    const approved = window.confirm("Delete this game? This cannot be undone.")
-    if (!approved) {
-      return
-    }
-
-    try {
-      setDeletingGameID(gameID)
-      await apiClient.deleteGame(gameID)
-      setGames((current) => current.filter((game) => game.id !== gameID))
-    } catch {
-      setErrorMessage("Could not delete the game. Please try again.")
-    } finally {
-      setDeletingGameID(null)
-    }
-  }
 
   if (isLoading) {
     return (
@@ -168,15 +150,6 @@ export default function GamesList({
                   <div className="flex items-center gap-2">
                     <Button asChild type="button" variant="outline" size="sm">
                       <a href={`/games/${game.id}`}>View</a>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => void handleDelete(game.id as number)}
-                      disabled={deletingGameID === game.id}
-                    >
-                      {deletingGameID === game.id ? "Deleting..." : "Delete"}
                     </Button>
                   </div>
                 </div>
