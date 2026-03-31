@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"strings"
 )
 
 //go:generate go tool counterfeiter -generate
@@ -11,6 +12,7 @@ import (
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *UserRecord) error
 	FindUserByUsername(ctx context.Context, username string) (*UserRecord, error)
+	SearchUsersByQuery(ctx context.Context, query string) ([]*UserRecord, error)
 }
 
 //counterfeiter:generate -o ../fakes/auth-session-service.go . SessionService
@@ -106,4 +108,19 @@ func (s *Service) Signin(ctx context.Context, input *SigninInput) (*AuthResult, 
 	}
 
 	return &AuthResult{User: userFromRecord(user), Token: token}, nil
+}
+
+func (s *Service) SearchPlayers(ctx context.Context, query string) (*SearchPlayersResult, error) {
+	trimmedQuery := strings.TrimSpace(query)
+	users, err := s.userRepo.SearchUsersByQuery(ctx, trimmedQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	players := make([]*User, 0, len(users))
+	for _, user := range users {
+		players = append(players, userFromRecord(user))
+	}
+
+	return &SearchPlayersResult{Players: players}, nil
 }

@@ -11,8 +11,10 @@ import (
 	ss "github.com/tobyrushton/padel-stats/libs/auth/sessions"
 	"github.com/tobyrushton/padel-stats/libs/config"
 	"github.com/tobyrushton/padel-stats/libs/db/postgres"
+	dbgames "github.com/tobyrushton/padel-stats/libs/db/postgres/games"
 	"github.com/tobyrushton/padel-stats/libs/db/postgres/sessions"
 	"github.com/tobyrushton/padel-stats/libs/db/postgres/users"
+	gamelib "github.com/tobyrushton/padel-stats/libs/games"
 	"github.com/tobyrushton/padel-stats/pkg/api/handlers"
 )
 
@@ -59,6 +61,19 @@ func main() {
 
 	ah := handlers.NewAuthHandler(as)
 	ah.RegisterRoutes(r)
+
+	gr, err := dbgames.NewRepository(db)
+	if err != nil {
+		panic(err)
+	}
+
+	gs, err := gamelib.NewService(gr)
+	if err != nil {
+		panic(err)
+	}
+
+	gh := handlers.NewGamesHandler(gs, ss)
+	gh.RegisterRoutes(r)
 
 	lambda.Start(httpadapter.NewV2(r).ProxyWithContext)
 }

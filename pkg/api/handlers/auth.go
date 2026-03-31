@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/tobyrushton/padel-stats/libs/auth"
@@ -12,6 +13,7 @@ import (
 type AuthService interface {
 	Signup(ctx context.Context, input *auth.SignupInput) (*auth.AuthResult, error)
 	Signin(ctx context.Context, input *auth.SigninInput) (*auth.AuthResult, error)
+	SearchPlayers(ctx context.Context, query string) (*auth.SearchPlayersResult, error)
 }
 
 type AuthHandler struct {
@@ -26,6 +28,10 @@ func (h *AuthHandler) RegisterRoutes(r chi.Router) {
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/signup", h.Signup)
 		r.Post("/signin", h.Signin)
+	})
+
+	r.Route("/players", func(r chi.Router) {
+		r.Get("/search", h.SearchPlayers)
 	})
 }
 
@@ -77,6 +83,28 @@ func (h *AuthHandler) Signin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := h.authService.Signin(r.Context(), &input)
+	if err != nil {
+		handleAuthError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, result)
+}
+
+// SearchPlayers returns players matching a query.
+// @Summary Search players
+// @Description Search players by username, first name, or last name. Returns default player list when query is empty.
+// @Tags players
+// @Produce json
+// @Param query query string false "Optional player search query"
+// @Success 200 {object} auth.SearchPlayersResult
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /players/search [get]
+func (h *AuthHandler) SearchPlayers(w http.ResponseWriter, r *http.Request) {
+	query := strings.TrimSpace(r.URL.Query().Get("query"))
+
+	result, err := h.authService.SearchPlayers(r.Context(), query)
 	if err != nil {
 		handleAuthError(w, err)
 		return
