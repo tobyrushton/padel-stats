@@ -12,9 +12,11 @@ import (
 	"github.com/tobyrushton/padel-stats/libs/config"
 	"github.com/tobyrushton/padel-stats/libs/db/postgres"
 	dbgames "github.com/tobyrushton/padel-stats/libs/db/postgres/games"
+	dbleaderboard "github.com/tobyrushton/padel-stats/libs/db/postgres/leaderboard"
 	"github.com/tobyrushton/padel-stats/libs/db/postgres/sessions"
 	"github.com/tobyrushton/padel-stats/libs/db/postgres/users"
 	gamelib "github.com/tobyrushton/padel-stats/libs/games"
+	leaderboardlib "github.com/tobyrushton/padel-stats/libs/leaderboard"
 	"github.com/tobyrushton/padel-stats/pkg/api/handlers"
 )
 
@@ -74,6 +76,19 @@ func main() {
 
 	gh := handlers.NewGamesHandler(gs, ss)
 	gh.RegisterRoutes(r)
+
+	lr, err := dbleaderboard.NewRepository(db)
+	if err != nil {
+		panic(err)
+	}
+
+	ls, err := leaderboardlib.NewService(lr)
+	if err != nil {
+		panic(err)
+	}
+
+	lh := handlers.NewLeaderboardHandler(ls)
+	lh.RegisterRoutes(r)
 
 	lambda.Start(httpadapter.NewV2(r).ProxyWithContext)
 }
