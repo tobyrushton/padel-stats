@@ -80,6 +80,9 @@ definitions:
       createdAt:
         format: date-time
         type: string
+      creatorId:
+        format: int64
+        type: integer
       id:
         format: int64
         type: integer
@@ -229,6 +232,10 @@ paths:
             $ref: '#/definitions/games.Game'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/handlers.ErrorResponse'
         "500":

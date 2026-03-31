@@ -191,6 +191,15 @@ export interface paths {
                         "application/json": components["schemas"]["handlers.ErrorResponse"];
                     };
                 };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["handlers.ErrorResponse"];
+                    };
+                };
                 /** @description Internal Server Error */
                 500: {
                     headers: {
@@ -499,6 +508,8 @@ export interface components {
         "games.Game": {
             /** Format: date-time */
             createdAt?: string;
+            /** Format: int64 */
+            creatorId?: number;
             /** Format: int64 */
             id?: number;
             /** Format: date-time */

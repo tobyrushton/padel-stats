@@ -24,6 +24,7 @@ func NewRepository(db *bun.DB) (*Repository, error) {
 
 func (r *Repository) CreateGame(ctx context.Context, game *gamedomain.GameRecord) error {
 	model := &models.Game{
+		CreatorID:      game.CreatorID,
 		SeasonID:       game.SeasonID,
 		Team1Player1ID: game.Team1Player1ID,
 		Team1Player2ID: game.Team1Player2ID,
@@ -112,6 +113,7 @@ func gameRecordFromModel(model *models.Game) *gamedomain.GameRecord {
 
 	return &gamedomain.GameRecord{
 		ID:             model.ID,
+		CreatorID:      model.CreatorID,
 		SeasonID:       model.SeasonID,
 		Team1Player1ID: model.Team1Player1ID,
 		Team1Player2ID: model.Team1Player2ID,

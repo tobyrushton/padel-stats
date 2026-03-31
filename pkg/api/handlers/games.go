@@ -6,24 +6,31 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/tobyrushton/padel-stats/libs/db/models"
 	gamedomain "github.com/tobyrushton/padel-stats/libs/games"
 )
 
 type GamesService interface {
-	CreateGame(ctx context.Context, input *gamedomain.CreateGameInput) (*gamedomain.Game, error)
+	CreateGame(ctx context.Context, creatorID int64, input *gamedomain.CreateGameInput) (*gamedomain.Game, error)
 	ListGamesForPlayer(ctx context.Context, playerID int64) ([]*gamedomain.Game, error)
 	GetGameByID(ctx context.Context, gameID int64) (*gamedomain.Game, error)
 	DeleteGame(ctx context.Context, gameID int64) error
 }
 
-type GamesHandler struct {
-	gamesService GamesService
+type SessionValidator interface {
+	Validate(ctx context.Context, tokenString string) (*models.Session, error)
 }
 
-func NewGamesHandler(gamesService GamesService) *GamesHandler {
-	return &GamesHandler{gamesService: gamesService}
+type GamesHandler struct {
+	gamesService     GamesService
+	sessionValidator SessionValidator
+}
+
+func NewGamesHandler(gamesService GamesService, sessionValidator SessionValidator) *GamesHandler {
+	return &GamesHandler{gamesService: gamesService, sessionValidator: sessionValidator}
 }
 
 func (h *GamesHandler) RegisterRoutes(r chi.Router) {
@@ -45,16 +52,29 @@ func (h *GamesHandler) RegisterRoutes(r chi.Router) {
 // @Param request body games.CreateGameInput true "Create game payload"
 // @Success 201 {object} games.Game
 // @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /games [post]
 func (h *GamesHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
+	tokenString := bearerTokenFromHeader(r.Header.Get("Authorization"))
+	if tokenString == "" {
+		writeError(w, http.StatusUnauthorized, "missing bearer token")
+		return
+	}
+
+	session, err := h.sessionValidator.Validate(r.Context(), tokenString)
+	if err != nil || session == nil || session.UserID <= 0 {
+		writeError(w, http.StatusUnauthorized, "invalid or expired session")
+		return
+	}
+
 	var input gamedomain.CreateGameInput
 	if err := decodeJSON(r, &input); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	result, err := h.gamesService.CreateGame(r.Context(), &input)
+	result, err := h.gamesService.CreateGame(r.Context(), session.UserID, &input)
 	if err != nil {
 		handleGameError(w, err)
 		return
@@ -152,6 +172,7 @@ func handleGameError(w http.ResponseWriter, err error) {
 		errors.Is(err, gamedomain.ErrDuplicatePlayers),
 		errors.Is(err, gamedomain.ErrInvalidScore),
 		errors.Is(err, gamedomain.ErrInvalidPlayedAt),
+		errors.Is(err, gamedomain.ErrInvalidCreatorID),
 		errors.Is(err, gamedomain.ErrInvalidGameID),
 		errors.Is(err, gamedomain.ErrInvalidDeleteGame),
 		errors.Is(err, gamedomain.ErrInvalidPlayerQuery):
@@ -159,4 +180,19 @@ func handleGameError(w http.ResponseWriter, err error) {
 	default:
 		writeError(w, http.StatusInternalServerError, "internal server error")
 	}
+}
+
+func bearerTokenFromHeader(authorization string) string {
+	const prefix = "Bearer "
+
+	if !strings.HasPrefix(authorization, prefix) {
+		return ""
+	}
+
+	token := strings.TrimSpace(strings.TrimPrefix(authorization, prefix))
+	if token == "" {
+		return ""
+	}
+
+	return token
 }

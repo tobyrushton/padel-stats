@@ -72,7 +72,7 @@ func main() {
 		panic(err)
 	}
 
-	gh := handlers.NewGamesHandler(gs)
+	gh := handlers.NewGamesHandler(gs, ss)
 	gh.RegisterRoutes(r)
 
 	lambda.Start(httpadapter.NewV2(r).ProxyWithContext)

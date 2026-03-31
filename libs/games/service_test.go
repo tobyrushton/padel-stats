@@ -58,13 +58,16 @@ func (suite *ServiceTestSuite) TestCreateGame_Success() {
 		return nil
 	}
 
-	result, err := suite.service.CreateGame(suite.ctx, input)
+	result, err := suite.service.CreateGame(suite.ctx, 77, input)
 
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), result)
 	assert.Equal(suite.T(), int64(99), result.ID)
+	assert.Equal(suite.T(), int64(77), result.CreatorID)
 	assert.Equal(suite.T(), int64(10), result.Team1Player1ID)
 	assert.Equal(suite.T(), 1, suite.repo.CreateGameCallCount())
+	_, createdRecord := suite.repo.CreateGameArgsForCall(0)
+	assert.Equal(suite.T(), int64(77), createdRecord.CreatorID)
 }
 
 func (suite *ServiceTestSuite) TestCreateGame_DuplicatePlayers() {
@@ -79,7 +82,7 @@ func (suite *ServiceTestSuite) TestCreateGame_DuplicatePlayers() {
 		PlayedAt:       time.Now().UTC(),
 	}
 
-	result, err := suite.service.CreateGame(suite.ctx, input)
+	result, err := suite.service.CreateGame(suite.ctx, 77, input)
 
 	assert.ErrorIs(suite.T(), err, games.ErrDuplicatePlayers)
 	assert.Nil(suite.T(), result)
@@ -100,11 +103,30 @@ func (suite *ServiceTestSuite) TestCreateGame_RepoError() {
 
 	suite.repo.CreateGameReturns(errors.New("insert failed"))
 
-	result, err := suite.service.CreateGame(suite.ctx, input)
+	result, err := suite.service.CreateGame(suite.ctx, 77, input)
 
 	assert.EqualError(suite.T(), err, "insert failed")
 	assert.Nil(suite.T(), result)
 	assert.Equal(suite.T(), 1, suite.repo.CreateGameCallCount())
+}
+
+func (suite *ServiceTestSuite) TestCreateGame_InvalidCreatorID() {
+	input := &games.CreateGameInput{
+		SeasonID:       1,
+		Team1Player1ID: 10,
+		Team1Player2ID: 11,
+		Team2Player1ID: 12,
+		Team2Player2ID: 13,
+		Team1Score:     6,
+		Team2Score:     4,
+		PlayedAt:       time.Now().UTC(),
+	}
+
+	result, err := suite.service.CreateGame(suite.ctx, 0, input)
+
+	assert.ErrorIs(suite.T(), err, games.ErrInvalidCreatorID)
+	assert.Nil(suite.T(), result)
+	assert.Equal(suite.T(), 0, suite.repo.CreateGameCallCount())
 }
 
 func (suite *ServiceTestSuite) TestListGamesForPlayer_Success() {

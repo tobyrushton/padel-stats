@@ -14,6 +14,7 @@ var (
 	ErrInvalidGameID      = errors.New("invalid game id")
 	ErrInvalidDeleteGame  = errors.New("invalid game id for delete")
 	ErrInvalidPlayerQuery = errors.New("invalid player id for query")
+	ErrInvalidCreatorID   = errors.New("invalid creator id")
 )
 
 func (in *CreateGameInput) Validate() error {

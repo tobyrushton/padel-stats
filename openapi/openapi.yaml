@@ -107,6 +107,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/handlers.ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
         "500":
           description: Internal Server Error
           content:
@@ -335,6 +341,9 @@ components:
         createdAt:
           type: string
           format: date-time
+        creatorId:
+          type: integer
+          format: int64
         id:
           type: integer
           format: int64

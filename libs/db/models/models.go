@@ -49,7 +49,9 @@ type Game struct {
 	bun.BaseModel `bun:"table:games,alias:g"`
 
 	ID             int64     `bun:"id,pk,autoincrement"`
+	CreatorID      int64     `bun:"creator_id,notnull"`
 	SeasonID       int64     `bun:"season_id,notnull"`
+	Creator        *User     `bun:"rel:belongs-to,join:creator_id=id"`
 	Season         *Season   `bun:"rel:belongs-to,join:season_id=id"`
 	Team1Player1ID int64     `bun:"team1_player1_id,notnull"`
 	Team1Player2ID int64     `bun:"team1_player2_id,notnull"`

@@ -25,6 +25,7 @@ type Player struct {
 // Game is an API-safe game contract.
 type Game struct {
 	ID             int64     `json:"id" format:"int64"`
+	CreatorID      int64     `json:"creatorId" format:"int64"`
 	SeasonID       int64     `json:"seasonId" format:"int64"`
 	Team1Player1ID int64     `json:"team1Player1Id" format:"int64"`
 	Team1Player2ID int64     `json:"team1Player2Id" format:"int64"`
@@ -52,6 +53,7 @@ type PlayerRecord struct {
 // GameRecord is a persistence-layer contract independent from DB model structs.
 type GameRecord struct {
 	ID             int64
+	CreatorID      int64
 	SeasonID       int64
 	Team1Player1ID int64
 	Team1Player2ID int64
@@ -75,6 +77,7 @@ func gameFromRecord(record *GameRecord) *Game {
 
 	return &Game{
 		ID:             record.ID,
+		CreatorID:      record.CreatorID,
 		SeasonID:       record.SeasonID,
 		Team1Player1ID: record.Team1Player1ID,
 		Team1Player2ID: record.Team1Player2ID,

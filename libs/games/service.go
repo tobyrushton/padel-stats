@@ -27,9 +27,13 @@ func NewService(repo Repository) (*Service, error) {
 	return &Service{repo: repo}, nil
 }
 
-func (s *Service) CreateGame(ctx context.Context, input *CreateGameInput) (*Game, error) {
+func (s *Service) CreateGame(ctx context.Context, creatorID int64, input *CreateGameInput) (*Game, error) {
 	if input == nil {
 		return nil, ErrInvalidGameID
+	}
+
+	if creatorID <= 0 {
+		return nil, ErrInvalidCreatorID
 	}
 
 	if err := input.Validate(); err != nil {
@@ -37,6 +41,7 @@ func (s *Service) CreateGame(ctx context.Context, input *CreateGameInput) (*Game
 	}
 
 	record := &GameRecord{
+		CreatorID:      creatorID,
 		SeasonID:       input.SeasonID,
 		Team1Player1ID: input.Team1Player1ID,
 		Team1Player2ID: input.Team1Player2ID,

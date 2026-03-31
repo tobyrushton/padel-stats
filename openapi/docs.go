@@ -156,6 +156,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/handlers.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -454,6 +460,10 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "string",
                     "format": "date-time"
+                },
+                "creatorId": {
+                    "type": "integer",
+                    "format": "int64"
                 },
                 "id": {
                     "type": "integer",
