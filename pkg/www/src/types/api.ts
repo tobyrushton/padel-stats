@@ -484,6 +484,7 @@ export interface components {
             firstName?: string;
             /** Format: int64 */
             id?: number;
+            isAdmin?: boolean;
             lastName?: string;
             /** Format: date-time */
             updatedAt?: string;

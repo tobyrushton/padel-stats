@@ -42,6 +42,8 @@ definitions:
       id:
         format: int64
         type: integer
+      isAdmin:
+        type: boolean
       lastName:
         type: string
       updatedAt:

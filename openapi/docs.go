@@ -407,6 +407,9 @@ const docTemplate = `{
                     "type": "integer",
                     "format": "int64"
                 },
+                "isAdmin": {
+                    "type": "boolean"
+                },
                 "lastName": {
                     "type": "string"
                 },
