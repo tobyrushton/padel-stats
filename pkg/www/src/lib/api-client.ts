@@ -12,6 +12,8 @@ type GetGameByIDOperation = NonNullable<paths["/games/{gameID}"]["get"]>
 type DeleteGameByIDOperation = NonNullable<paths["/games/{gameID}"]["delete"]>
 type ListGamesForPlayerOperation = NonNullable<paths["/players/{playerID}/games"]["get"]>
 type SearchPlayersOperation = NonNullable<paths["/players/search"]["get"]>
+type GetAllTimeLeaderboardOperation = NonNullable<paths["/leaderboard"]["get"]>
+type GetSeasonLeaderboardOperation = NonNullable<paths["/seasons/{seasonID}/leaderboard"]["get"]>
 
 export type SigninInput = JsonContent<SigninOperation["requestBody"]>
 export type SignupInput = JsonContent<SignupOperation["requestBody"]>
@@ -21,6 +23,8 @@ export type Game = JsonContent<GetGameByIDOperation["responses"][200]>
 export type PlayerGames = JsonContent<ListGamesForPlayerOperation["responses"][200]>
 export type SearchPlayer = components["schemas"]["auth.User"]
 export type SearchPlayersResult = JsonContent<SearchPlayersOperation["responses"][200]>
+export type LeaderboardEntries = JsonContent<GetAllTimeLeaderboardOperation["responses"][200]>
+export type LeaderboardEntry = LeaderboardEntries[number]
 export type ErrorResponse = components["schemas"]["handlers.ErrorResponse"]
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
@@ -122,6 +126,22 @@ export class ApiClient {
 
     return this.request<undefined, SearchPlayersResult, ErrorResponse>({
       path: `/players/search${queryString}`,
+      method: "GET",
+      expectedStatus: [200],
+    })
+  }
+
+  async getAllTimeLeaderboard(): Promise<LeaderboardEntries> {
+    return this.request<undefined, LeaderboardEntries, ErrorResponse>({
+      path: "/leaderboard",
+      method: "GET",
+      expectedStatus: [200],
+    })
+  }
+
+  async getSeasonLeaderboard(seasonID: number): Promise<LeaderboardEntries> {
+    return this.request<undefined, LeaderboardEntries, ErrorResponse>({
+      path: `/seasons/${seasonID}/leaderboard`,
       method: "GET",
       expectedStatus: [200],
     })
