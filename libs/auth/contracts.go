@@ -27,6 +27,7 @@ type User struct {
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
 	Username  string    `json:"username"`
+	IsAdmin   bool      `json:"isAdmin"`
 	CreatedAt time.Time `json:"createdAt" format:"date-time"`
 	UpdatedAt time.Time `json:"updatedAt" format:"date-time"`
 }
@@ -44,6 +45,7 @@ type UserRecord struct {
 	LastName       string
 	Username       string
 	HashedPassword string
+	IsAdmin        bool
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 }
@@ -58,6 +60,7 @@ func userFromRecord(record *UserRecord) *User {
 		FirstName: record.FirstName,
 		LastName:  record.LastName,
 		Username:  record.Username,
+		IsAdmin:   record.IsAdmin,
 		CreatedAt: record.CreatedAt,
 		UpdatedAt: record.UpdatedAt,
 	}

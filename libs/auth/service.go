@@ -13,6 +13,7 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, user *UserRecord) error
 	FindUserByUsername(ctx context.Context, username string) (*UserRecord, error)
 	SearchUsersByQuery(ctx context.Context, query string) ([]*UserRecord, error)
+	IsAdmin(ctx context.Context, userID int64) (bool, error)
 }
 
 //counterfeiter:generate -o ../fakes/auth-session-service.go . SessionService
