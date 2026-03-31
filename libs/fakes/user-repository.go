@@ -35,6 +35,20 @@ type FakeUserRepository struct {
 		result1 *auth.UserRecord
 		result2 error
 	}
+	IsAdminStub        func(context.Context, int64) (bool, error)
+	isAdminMutex       sync.RWMutex
+	isAdminArgsForCall []struct {
+		arg1 context.Context
+		arg2 int64
+	}
+	isAdminReturns struct {
+		result1 bool
+		result2 error
+	}
+	isAdminReturnsOnCall map[int]struct {
+		result1 bool
+		result2 error
+	}
 	SearchUsersByQueryStub        func(context.Context, string) ([]*auth.UserRecord, error)
 	searchUsersByQueryMutex       sync.RWMutex
 	searchUsersByQueryArgsForCall []struct {
@@ -176,6 +190,71 @@ func (fake *FakeUserRepository) FindUserByUsernameReturnsOnCall(i int, result1 *
 	}
 	fake.findUserByUsernameReturnsOnCall[i] = struct {
 		result1 *auth.UserRecord
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeUserRepository) IsAdmin(arg1 context.Context, arg2 int64) (bool, error) {
+	fake.isAdminMutex.Lock()
+	ret, specificReturn := fake.isAdminReturnsOnCall[len(fake.isAdminArgsForCall)]
+	fake.isAdminArgsForCall = append(fake.isAdminArgsForCall, struct {
+		arg1 context.Context
+		arg2 int64
+	}{arg1, arg2})
+	stub := fake.IsAdminStub
+	fakeReturns := fake.isAdminReturns
+	fake.recordInvocation("IsAdmin", []interface{}{arg1, arg2})
+	fake.isAdminMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeUserRepository) IsAdminCallCount() int {
+	fake.isAdminMutex.RLock()
+	defer fake.isAdminMutex.RUnlock()
+	return len(fake.isAdminArgsForCall)
+}
+
+func (fake *FakeUserRepository) IsAdminCalls(stub func(context.Context, int64) (bool, error)) {
+	fake.isAdminMutex.Lock()
+	defer fake.isAdminMutex.Unlock()
+	fake.IsAdminStub = stub
+}
+
+func (fake *FakeUserRepository) IsAdminArgsForCall(i int) (context.Context, int64) {
+	fake.isAdminMutex.RLock()
+	defer fake.isAdminMutex.RUnlock()
+	argsForCall := fake.isAdminArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeUserRepository) IsAdminReturns(result1 bool, result2 error) {
+	fake.isAdminMutex.Lock()
+	defer fake.isAdminMutex.Unlock()
+	fake.IsAdminStub = nil
+	fake.isAdminReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeUserRepository) IsAdminReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.isAdminMutex.Lock()
+	defer fake.isAdminMutex.Unlock()
+	fake.IsAdminStub = nil
+	if fake.isAdminReturnsOnCall == nil {
+		fake.isAdminReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
+		})
+	}
+	fake.isAdminReturnsOnCall[i] = struct {
+		result1 bool
 		result2 error
 	}{result1, result2}
 }

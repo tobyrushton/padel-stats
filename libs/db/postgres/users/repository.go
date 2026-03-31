@@ -102,3 +102,20 @@ func (r *Repository) SearchUsersByQuery(ctx context.Context, query string) ([]*a
 
 	return result, nil
 }
+
+func (r *Repository) IsAdmin(ctx context.Context, userID int64) (bool, error) {
+	model := new(models.User)
+	err := r.db.NewSelect().
+		Model(model).
+		Where("id = ? AND is_admin = true", userID).
+		Limit(1).
+		Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
