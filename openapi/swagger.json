@@ -254,6 +254,35 @@
                 }
             }
         },
+        "/leaderboard": {
+            "get": {
+                "description": "Retrieve leaderboard standings derived from game score difference across all seasons.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "leaderboard"
+                ],
+                "summary": "Get all-time leaderboard",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/leaderboard.Entry"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/players/search": {
             "get": {
                 "description": "Search players by username, first name, or last name. Returns default player list when query is empty.",
@@ -320,6 +349,50 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/games.Game"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/seasons/{seasonID}/leaderboard": {
+            "get": {
+                "description": "Retrieve leaderboard standings derived from game score difference for one season.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "leaderboard"
+                ],
+                "summary": "Get season leaderboard",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Season ID",
+                        "name": "seasonID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/leaderboard.Entry"
                             }
                         }
                     },
@@ -537,6 +610,39 @@
             "properties": {
                 "error": {
                     "type": "string"
+                }
+            }
+        },
+        "leaderboard.Entry": {
+            "type": "object",
+            "properties": {
+                "firstName": {
+                    "type": "string"
+                },
+                "gamesPlayed": {
+                    "type": "integer"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "losses": {
+                    "type": "integer"
+                },
+                "playerId": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "rank": {
+                    "type": "integer"
+                },
+                "scoreDifference": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "wins": {
+                    "type": "integer"
                 }
             }
         }

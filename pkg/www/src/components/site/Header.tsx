@@ -43,12 +43,18 @@ export default function Header() {
               <Button asChild variant="ghost" size="sm">
                 <a href="/games">Games</a>
               </Button>
+              <Button asChild variant="ghost" size="sm">
+                <a href="/leaderboard">Leaderboard</a>
+              </Button>
               <Button type="button" variant="outline" size="sm" onClick={handleLogout}>
                 Log out
               </Button>
             </>
           ) : (
             <>
+              <Button asChild variant="ghost" size="sm">
+                <a href="/leaderboard">Leaderboard</a>
+              </Button>
               <Button asChild variant="ghost" size="sm">
                 <a href="/auth/signin">Log in</a>
               </Button>
