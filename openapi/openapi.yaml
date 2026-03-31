@@ -190,6 +190,28 @@ paths:
             "*/*":
               schema:
                 $ref: "#/components/schemas/handlers.ErrorResponse"
+  /leaderboard:
+    get:
+      description: Retrieve leaderboard standings derived from game score difference
+        across all seasons.
+      tags:
+        - leaderboard
+      summary: Get all-time leaderboard
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/leaderboard.Entry"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
   /players/search:
     get:
       description: Search players by username, first name, or last name. Returns
@@ -244,6 +266,41 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/games.Game"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+  "/seasons/{seasonID}/leaderboard":
+    get:
+      description: Retrieve leaderboard standings derived from game score difference
+        for one season.
+      tags:
+        - leaderboard
+      summary: Get season leaderboard
+      parameters:
+        - description: Season ID
+          name: seasonID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/leaderboard.Entry"
         "400":
           description: Bad Request
           content:
@@ -397,3 +454,25 @@ components:
       properties:
         error:
           type: string
+    leaderboard.Entry:
+      type: object
+      properties:
+        firstName:
+          type: string
+        gamesPlayed:
+          type: integer
+        lastName:
+          type: string
+        losses:
+          type: integer
+        playerId:
+          type: integer
+          format: int64
+        rank:
+          type: integer
+        scoreDifference:
+          type: integer
+        username:
+          type: string
+        wins:
+          type: integer
