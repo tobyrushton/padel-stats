@@ -7,8 +7,8 @@ import (
 
 //go:generate go tool counterfeiter -generate
 
-//counterfeiter:generate -o ../fakes/games-repository.go . Repository
-type Repository interface {
+//counterfeiter:generate -o ../fakes/games-repository.go . GamesRepository
+type GamesRepository interface {
 	CreateGame(ctx context.Context, game *GameRecord) error
 	FindGamesByPlayerID(ctx context.Context, playerID int64) ([]*GameRecord, error)
 	FindGameByID(ctx context.Context, gameID int64) (*GameRecord, error)
@@ -16,10 +16,10 @@ type Repository interface {
 }
 
 type Service struct {
-	repo Repository
+	repo GamesRepository
 }
 
-func NewService(repo Repository) (*Service, error) {
+func NewService(repo GamesRepository) (*Service, error) {
 	if repo == nil {
 		return nil, errors.New("games repository is required")
 	}
