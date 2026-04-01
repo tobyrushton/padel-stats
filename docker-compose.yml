@@ -1,0 +1,11 @@
+services:
+  padel-stats-db:
+    image: postgres:18
+    container_name: padel-stats-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    restart: unless-stopped

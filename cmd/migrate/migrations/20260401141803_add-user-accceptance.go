@@ -13,7 +13,7 @@ func init() {
 
 		_, err := db.ExecContext(ctx, `
 			ALTER TABLE users
-			ADD COLUMN is_accepted_by_admin BOOLEAN NOT NULL DEFAULT FALSE;
+			ADD COLUMN IF NOT EXISTS is_accepted_by_admin BOOLEAN NOT NULL DEFAULT FALSE;
 		`)
 
 		return err
@@ -21,7 +21,7 @@ func init() {
 		fmt.Print(" [down migration] ")
 		_, err := db.ExecContext(ctx, `
 			ALTER TABLE users
-			DROP COLUMN is_accepted_by_admin;
+			DROP COLUMN IF EXISTS is_accepted_by_admin;
 		`)
 
 		return err

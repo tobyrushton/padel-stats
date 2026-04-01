@@ -10,19 +10,29 @@ export default $config({
     };
   },
   async run() {
-    const bexboxPL = new neon.Project("bexbox-pl", {
-      name: "bexbox-pl",
-      regionId: "aws-eu-west-2",
-      pgVersion: 17,
-      orgId: process.env.NEON_ORG_ID,
-      historyRetentionSeconds: 21600,
-    })
 
-    const db = new sst.Linkable("NeonDB", {
-      properties: {
-        connectionString: bexboxPL.connectionUri,
-      }
-    });
+    let db;
+    if ($app.stage === "production") {
+      const bexboxPL = new neon.Project("bexbox-pl", {
+        name: "bexbox-pl",
+        regionId: "aws-eu-west-2",
+        pgVersion: 17,
+        orgId: process.env.NEON_ORG_ID,
+        historyRetentionSeconds: 21600,
+      })
+
+      db = new sst.Linkable("NeonDB", {
+        properties: {
+          connectionString: bexboxPL.connectionUri,
+        }
+      });
+    } else {
+      db = new sst.Linkable("NeonDB", {
+        properties: {
+          connectionString: "postgresql://admin:admin@localhost:5432/mydb?sslmode=disable",
+        }
+      })
+    }
 
     const api = new sst.aws.ApiGatewayV2("API", {
       link: [db],
