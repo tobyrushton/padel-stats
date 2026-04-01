@@ -5,6 +5,56 @@ info:
   contact: {}
   version: "1.0"
 paths:
+  "/admin/users/{userID}/approve":
+    post:
+      description: Approve a pending user account. Requires an authenticated admin user.
+      tags:
+        - auth
+      summary: Approve user
+      parameters:
+        - description: User ID
+          name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/auth.User"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
   /auth/signin:
     post:
       description: Authenticate with username and password.
@@ -443,6 +493,8 @@ components:
         id:
           type: integer
           format: int64
+        isAcceptedByAdmin:
+          type: boolean
         isAdmin:
           type: boolean
         lastName:
