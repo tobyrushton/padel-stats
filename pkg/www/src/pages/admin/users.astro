@@ -1,0 +1,51 @@
+---
+import { Resource } from "sst"
+import "@/styles/global.css"
+import Header from "@/components/site/Header"
+import UserApprovalWorkspace from "@/components/admin/UserApprovalWorkspace"
+
+const apiBaseUrl = Resource.API.url
+
+const authToken = Astro.cookies.get("auth_token")?.value
+
+if (!authToken) {
+  return Astro.redirect("/auth/signin")
+}
+
+const currentUserResponse = await fetch(`${apiBaseUrl}/auth/me`, {
+  method: "GET",
+  headers: {
+    Authorization: `Bearer ${authToken}`,
+  },
+})
+
+if (currentUserResponse.status === 401) {
+  Astro.cookies.delete("auth_token", { path: "/" })
+  Astro.cookies.delete("auth_user", { path: "/" })
+  return Astro.redirect("/auth/signin")
+}
+
+if (!currentUserResponse.ok) {
+  return Astro.redirect("/")
+}
+
+const currentUser = await currentUserResponse.json()
+if (!currentUser?.isAdmin) {
+  return Astro.redirect("/")
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Admin Approvals | Padel Stats</title>
+  </head>
+  <body class="min-h-screen bg-background text-foreground">
+    <Header client:load />
+    <main class="mx-auto flex w-full max-w-6xl flex-1 px-4 py-10">
+      <UserApprovalWorkspace client:load apiBaseUrl={apiBaseUrl} />
+    </main>
+  </body>
+</html>

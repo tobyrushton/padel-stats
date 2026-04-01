@@ -47,9 +47,6 @@ func (suite *AuthServiceTestSuite) TestSignup_Success() {
 		user.ID = 1
 		return nil
 	}
-	suite.sessionSvc.CreateStub = func(ctx context.Context, userID int64) (string, error) {
-		return "jwt-token-123", nil
-	}
 
 	result, err := suite.service.Signup(suite.ctx, input)
 
@@ -57,9 +54,9 @@ func (suite *AuthServiceTestSuite) TestSignup_Success() {
 	assert.NotNil(suite.T(), result)
 	assert.NotNil(suite.T(), result.User)
 	assert.Equal(suite.T(), "johndoe", result.User.Username)
-	assert.Equal(suite.T(), "jwt-token-123", result.Token)
+	assert.Equal(suite.T(), "", result.Token)
 	assert.Equal(suite.T(), 1, suite.userRepo.CreateUserCallCount())
-	assert.Equal(suite.T(), 1, suite.sessionSvc.CreateCallCount())
+	assert.Equal(suite.T(), 0, suite.sessionSvc.CreateCallCount())
 }
 
 func (suite *AuthServiceTestSuite) TestSignup_UserExists() {
@@ -91,7 +88,7 @@ func (suite *AuthServiceTestSuite) TestSignin_Success() {
 	require.NoError(suite.T(), err)
 
 	suite.userRepo.FindUserByUsernameStub = func(ctx context.Context, username string) (*auth.UserRecord, error) {
-		return &auth.UserRecord{ID: 1, Username: username, HashedPassword: string(hash)}, nil
+		return &auth.UserRecord{ID: 1, Username: username, HashedPassword: string(hash), IsAcceptedByAdmin: true}, nil
 	}
 	suite.sessionSvc.CreateStub = func(ctx context.Context, userID int64) (string, error) {
 		return "jwt-token-456", nil
@@ -122,7 +119,7 @@ func (suite *AuthServiceTestSuite) TestSignin_WrongPassword() {
 	require.NoError(suite.T(), err)
 
 	suite.userRepo.FindUserByUsernameStub = func(ctx context.Context, username string) (*auth.UserRecord, error) {
-		return &auth.UserRecord{ID: 1, Username: username, HashedPassword: string(hash)}, nil
+		return &auth.UserRecord{ID: 1, Username: username, HashedPassword: string(hash), IsAcceptedByAdmin: true}, nil
 	}
 
 	result, err := suite.service.Signin(suite.ctx, &auth.SigninInput{Username: "johndoe", Password: "wrong-password"})
@@ -137,7 +134,7 @@ func (suite *AuthServiceTestSuite) TestSignin_SessionError() {
 	require.NoError(suite.T(), err)
 
 	suite.userRepo.FindUserByUsernameStub = func(ctx context.Context, username string) (*auth.UserRecord, error) {
-		return &auth.UserRecord{ID: 1, Username: username, HashedPassword: string(hash)}, nil
+		return &auth.UserRecord{ID: 1, Username: username, HashedPassword: string(hash), IsAcceptedByAdmin: true}, nil
 	}
 	suite.sessionSvc.CreateStub = func(ctx context.Context, userID int64) (string, error) {
 		return "", errors.New("session create failed")
@@ -147,6 +144,99 @@ func (suite *AuthServiceTestSuite) TestSignin_SessionError() {
 
 	assert.EqualError(suite.T(), err, "session create failed")
 	assert.Nil(suite.T(), result)
+}
+
+func (suite *AuthServiceTestSuite) TestSignin_UserPendingApproval() {
+	hash, err := bcrypt.GenerateFromPassword([]byte("securepassword123"), 12)
+	require.NoError(suite.T(), err)
+
+	suite.userRepo.FindUserByUsernameStub = func(ctx context.Context, username string) (*auth.UserRecord, error) {
+		return &auth.UserRecord{ID: 1, Username: username, HashedPassword: string(hash), IsAcceptedByAdmin: false}, nil
+	}
+
+	result, err := suite.service.Signin(suite.ctx, &auth.SigninInput{Username: "johndoe", Password: "securepassword123"})
+
+	assert.ErrorIs(suite.T(), err, auth.ErrUserPendingApproval)
+	assert.Nil(suite.T(), result)
+	assert.Equal(suite.T(), 0, suite.sessionSvc.CreateCallCount())
+}
+
+func (suite *AuthServiceTestSuite) TestGetCurrentUser_Success() {
+	suite.userRepo.FindUserByIDStub = func(ctx context.Context, userID int64) (*auth.UserRecord, error) {
+		assert.Equal(suite.T(), int64(22), userID)
+		return &auth.UserRecord{ID: userID, Username: "jane", IsAdmin: true}, nil
+	}
+
+	user, err := suite.service.GetCurrentUser(suite.ctx, 22)
+
+	assert.NoError(suite.T(), err)
+	assert.NotNil(suite.T(), user)
+	assert.Equal(suite.T(), int64(22), user.ID)
+	assert.True(suite.T(), user.IsAdmin)
+}
+
+func (suite *AuthServiceTestSuite) TestGetCurrentUser_UserNotFound() {
+	suite.userRepo.FindUserByIDStub = func(ctx context.Context, userID int64) (*auth.UserRecord, error) {
+		return nil, auth.ErrUserNotFound
+	}
+
+	user, err := suite.service.GetCurrentUser(suite.ctx, 22)
+
+	assert.ErrorIs(suite.T(), err, auth.ErrUserNotFound)
+	assert.Nil(suite.T(), user)
+}
+
+func (suite *AuthServiceTestSuite) TestApproveUser_Success() {
+	suite.userRepo.IsAdminStub = func(ctx context.Context, userID int64) (bool, error) {
+		assert.Equal(suite.T(), int64(10), userID)
+		return true, nil
+	}
+	findCalls := 0
+	suite.userRepo.FindUserByIDStub = func(ctx context.Context, userID int64) (*auth.UserRecord, error) {
+		findCalls++
+		if findCalls == 1 {
+			return &auth.UserRecord{ID: userID, Username: "pending", IsAcceptedByAdmin: false}, nil
+		}
+		return &auth.UserRecord{ID: userID, Username: "pending", IsAcceptedByAdmin: true}, nil
+	}
+	suite.userRepo.ApproveUserByIDStub = func(ctx context.Context, userID int64) error {
+		assert.Equal(suite.T(), int64(20), userID)
+		return nil
+	}
+
+	user, err := suite.service.ApproveUser(suite.ctx, 10, 20)
+
+	assert.NoError(suite.T(), err)
+	assert.NotNil(suite.T(), user)
+	assert.Equal(suite.T(), int64(20), user.ID)
+	assert.True(suite.T(), user.IsAcceptedByAdmin)
+}
+
+func (suite *AuthServiceTestSuite) TestApproveUser_NonAdmin() {
+	suite.userRepo.IsAdminStub = func(ctx context.Context, userID int64) (bool, error) {
+		return false, nil
+	}
+
+	user, err := suite.service.ApproveUser(suite.ctx, 10, 20)
+
+	assert.ErrorIs(suite.T(), err, auth.ErrAdminAccessRequired)
+	assert.Nil(suite.T(), user)
+	assert.Equal(suite.T(), 0, suite.userRepo.ApproveUserByIDCallCount())
+}
+
+func (suite *AuthServiceTestSuite) TestApproveUser_UserNotFound() {
+	suite.userRepo.IsAdminStub = func(ctx context.Context, userID int64) (bool, error) {
+		return true, nil
+	}
+	suite.userRepo.FindUserByIDStub = func(ctx context.Context, userID int64) (*auth.UserRecord, error) {
+		return nil, auth.ErrUserNotFound
+	}
+
+	user, err := suite.service.ApproveUser(suite.ctx, 10, 20)
+
+	assert.ErrorIs(suite.T(), err, auth.ErrUserNotFound)
+	assert.Nil(suite.T(), user)
+	assert.Equal(suite.T(), 0, suite.userRepo.ApproveUserByIDCallCount())
 }
 
 func (suite *AuthServiceTestSuite) TestSearchPlayers_Success() {

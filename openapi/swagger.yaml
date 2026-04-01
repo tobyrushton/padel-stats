@@ -42,6 +42,8 @@ definitions:
       id:
         format: int64
         type: integer
+      isAcceptedByAdmin:
+        type: boolean
       isAdmin:
         type: boolean
       lastName:
@@ -191,6 +193,71 @@ info:
   title: Padel Stats API
   version: "1.0"
 paths:
+  /admin/users/{userID}/approve:
+    post:
+      description: Approve a pending user account. Requires an authenticated admin
+        user.
+      parameters:
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Approve user
+      tags:
+      - auth
+  /auth/me:
+    get:
+      description: Retrieve the authenticated user from the active session token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get current user
+      tags:
+      - auth
   /auth/signin:
     post:
       consumes:

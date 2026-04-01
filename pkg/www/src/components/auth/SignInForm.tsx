@@ -21,6 +21,9 @@ function getSignInErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     const body = error.body as ErrorResponse | undefined
     if (body?.error) {
+      if (body.error === "user pending admin approval") {
+        return "Your account is pending admin approval."
+      }
       return body.error
     }
 
@@ -30,6 +33,10 @@ function getSignInErrorMessage(error: unknown): string {
 
     if (error.status === 400) {
       return "Please check your details and try again."
+    }
+
+    if (error.status === 403) {
+      return "Your account is pending admin approval."
     }
   }
 
