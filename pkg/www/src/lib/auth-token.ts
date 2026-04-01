@@ -1,32 +1,57 @@
 const AUTH_TOKEN_KEY = "auth_token"
 
-function canUseStorage(): boolean {
-  return typeof window !== "undefined" && typeof window.sessionStorage !== "undefined"
+function canUseDocument(): boolean {
+  return typeof document !== "undefined"
 }
 
-export function getAuthToken(): string | undefined {
-  if (!canUseStorage()) {
+function getCookie(name: string): string | undefined {
+  if (!canUseDocument()) {
     return undefined
   }
 
-  const token = window.sessionStorage.getItem(AUTH_TOKEN_KEY)
-  return token ?? undefined
+  const encodedName = `${encodeURIComponent(name)}=`
+  const cookies = document.cookie ? document.cookie.split(";") : []
+
+  for (const cookie of cookies) {
+    const trimmed = cookie.trim()
+    if (!trimmed.startsWith(encodedName)) {
+      continue
+    }
+
+    return decodeURIComponent(trimmed.slice(encodedName.length))
+  }
+
+  return undefined
+}
+
+function setCookie(name: string, value: string): void {
+  if (!canUseDocument()) {
+    return
+  }
+
+  const secure = window.location.protocol === "https:" ? "; Secure" : ""
+  document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Path=/; SameSite=Lax${secure}`
+}
+
+function clearCookie(name: string): void {
+  if (!canUseDocument()) {
+    return
+  }
+
+  const secure = window.location.protocol === "https:" ? "; Secure" : ""
+  document.cookie = `${encodeURIComponent(name)}=; Path=/; Max-Age=0; SameSite=Lax${secure}`
+}
+
+export function getAuthToken(): string | undefined {
+  return getCookie(AUTH_TOKEN_KEY)
 }
 
 export function setAuthToken(token: string): void {
-  if (!canUseStorage()) {
-    return
-  }
-
-  window.sessionStorage.setItem(AUTH_TOKEN_KEY, token)
+  setCookie(AUTH_TOKEN_KEY, token)
 }
 
 export function clearAuthToken(): void {
-  if (!canUseStorage()) {
-    return
-  }
-
-  window.sessionStorage.removeItem(AUTH_TOKEN_KEY)
+  clearCookie(AUTH_TOKEN_KEY)
 }
 
 function decodeJwtPayload(token: string): Record<string, unknown> | undefined {

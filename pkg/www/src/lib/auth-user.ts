@@ -11,8 +11,46 @@ interface StoredAuthUser {
   isAcceptedByAdmin?: boolean
 }
 
-function canUseStorage(): boolean {
-  return typeof window !== "undefined" && typeof window.sessionStorage !== "undefined"
+function canUseDocument(): boolean {
+  return typeof document !== "undefined"
+}
+
+function getCookie(name: string): string | undefined {
+  if (!canUseDocument()) {
+    return undefined
+  }
+
+  const encodedName = `${encodeURIComponent(name)}=`
+  const cookies = document.cookie ? document.cookie.split(";") : []
+
+  for (const cookie of cookies) {
+    const trimmed = cookie.trim()
+    if (!trimmed.startsWith(encodedName)) {
+      continue
+    }
+
+    return decodeURIComponent(trimmed.slice(encodedName.length))
+  }
+
+  return undefined
+}
+
+function setCookie(name: string, value: string): void {
+  if (!canUseDocument()) {
+    return
+  }
+
+  const secure = window.location.protocol === "https:" ? "; Secure" : ""
+  document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Path=/; SameSite=Lax${secure}`
+}
+
+function clearCookie(name: string): void {
+  if (!canUseDocument()) {
+    return
+  }
+
+  const secure = window.location.protocol === "https:" ? "; Secure" : ""
+  document.cookie = `${encodeURIComponent(name)}=; Path=/; Max-Age=0; SameSite=Lax${secure}`
 }
 
 function isStoredAuthUser(value: unknown): value is StoredAuthUser {
@@ -25,11 +63,7 @@ function isStoredAuthUser(value: unknown): value is StoredAuthUser {
 }
 
 export function getAuthUser(): StoredAuthUser | undefined {
-  if (!canUseStorage()) {
-    return undefined
-  }
-
-  const stored = window.sessionStorage.getItem(AUTH_USER_KEY)
+  const stored = getCookie(AUTH_USER_KEY)
   if (!stored) {
     return undefined
   }
@@ -53,12 +87,8 @@ export function setAuthUser(user: {
   isAdmin?: boolean
   isAcceptedByAdmin?: boolean
 } | null | undefined): void {
-  if (!canUseStorage()) {
-    return
-  }
-
   if (!user?.id || !Number.isInteger(user.id) || user.id <= 0) {
-    window.sessionStorage.removeItem(AUTH_USER_KEY)
+    clearCookie(AUTH_USER_KEY)
     return
   }
 
@@ -71,15 +101,11 @@ export function setAuthUser(user: {
     isAcceptedByAdmin: user.isAcceptedByAdmin,
   }
 
-  window.sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(payload))
+  setCookie(AUTH_USER_KEY, JSON.stringify(payload))
 }
 
 export function clearAuthUser(): void {
-  if (!canUseStorage()) {
-    return
-  }
-
-  window.sessionStorage.removeItem(AUTH_USER_KEY)
+  clearCookie(AUTH_USER_KEY)
 }
 
 export function getCurrentUserID(): number | undefined {

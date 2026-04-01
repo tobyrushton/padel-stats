@@ -5,6 +5,34 @@ import Header from "@/components/site/Header"
 import UserApprovalWorkspace from "@/components/admin/UserApprovalWorkspace"
 
 const apiBaseUrl = Resource.API.url
+
+const authToken = Astro.cookies.get("auth_token")?.value
+
+if (!authToken) {
+  return Astro.redirect("/auth/signin")
+}
+
+const currentUserResponse = await fetch(`${apiBaseUrl}/auth/me`, {
+  method: "GET",
+  headers: {
+    Authorization: `Bearer ${authToken}`,
+  },
+})
+
+if (currentUserResponse.status === 401) {
+  Astro.cookies.delete("auth_token", { path: "/" })
+  Astro.cookies.delete("auth_user", { path: "/" })
+  return Astro.redirect("/auth/signin")
+}
+
+if (!currentUserResponse.ok) {
+  return Astro.redirect("/")
+}
+
+const currentUser = await currentUserResponse.json()
+if (!currentUser?.isAdmin) {
+  return Astro.redirect("/")
+}
 ---
 
 <html lang="en">
@@ -14,45 +42,7 @@ const apiBaseUrl = Resource.API.url
     <meta name="generator" content={Astro.generator} />
     <title>Admin Approvals | Padel Stats</title>
   </head>
-  <body class="min-h-screen bg-background text-foreground" style="visibility: hidden;">
-    <script define:vars={{ apiBaseUrl }} is:inline>
-      const token = window.sessionStorage.getItem("auth_token")
-
-      if (!token) {
-        window.location.replace("/auth/signin")
-      } else {
-        fetch(`${apiBaseUrl}/auth/me`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-          .then(async (response) => {
-            if (response.status === 401) {
-              window.sessionStorage.removeItem("auth_token")
-              window.sessionStorage.removeItem("auth_user")
-              window.location.replace("/auth/signin")
-              return
-            }
-
-            if (!response.ok) {
-              window.location.replace("/")
-              return
-            }
-
-            const user = await response.json()
-            if (!user?.isAdmin) {
-              window.location.replace("/")
-              return
-            }
-
-            document.body.style.visibility = "visible"
-          })
-          .catch(() => {
-            window.location.replace("/")
-          })
-      }
-    </script>
+  <body class="min-h-screen bg-background text-foreground">
     <Header client:load />
     <main class="mx-auto flex w-full max-w-6xl flex-1 px-4 py-10">
       <UserApprovalWorkspace client:load apiBaseUrl={apiBaseUrl} />
