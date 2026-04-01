@@ -9,14 +9,16 @@ import (
 )
 
 var (
-	ErrUserNotFound       = errors.New("user not found")
-	ErrInvalidPassword    = errors.New("invalid password")
-	ErrUserExists         = errors.New("user already exists")
-	ErrInvalidUsername    = errors.New("invalid username format")
-	ErrInvalidSearchQuery = errors.New("search query must be at least 2 characters")
-	ErrPasswordTooShort   = errors.New("password must be at least 8 characters")
-	ErrInvalidFirstName   = errors.New("invalid first name")
-	ErrInvalidLastName    = errors.New("invalid last name")
+	ErrUserNotFound        = errors.New("user not found")
+	ErrInvalidPassword     = errors.New("invalid password")
+	ErrUserExists          = errors.New("user already exists")
+	ErrUserPendingApproval = errors.New("user pending admin approval")
+	ErrAdminAccessRequired = errors.New("admin access required")
+	ErrInvalidUsername     = errors.New("invalid username format")
+	ErrInvalidSearchQuery  = errors.New("search query must be at least 2 characters")
+	ErrPasswordTooShort    = errors.New("password must be at least 8 characters")
+	ErrInvalidFirstName    = errors.New("invalid first name")
+	ErrInvalidLastName     = errors.New("invalid last name")
 )
 
 const (

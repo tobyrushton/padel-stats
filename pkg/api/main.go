@@ -63,7 +63,7 @@ func main() {
 		panic(err)
 	}
 
-	ah := handlers.NewAuthHandler(as)
+	ah := handlers.NewAuthHandler(as, ss)
 	ah.RegisterRoutes(r)
 
 	gr, err := dbgames.NewRepository(db)

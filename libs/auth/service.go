@@ -11,7 +11,9 @@ import (
 //counterfeiter:generate -o ../fakes/user-repository.go . UserRepository
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *UserRecord) error
+	FindUserByID(ctx context.Context, userID int64) (*UserRecord, error)
 	FindUserByUsername(ctx context.Context, username string) (*UserRecord, error)
+	ApproveUserByID(ctx context.Context, userID int64) error
 	SearchUsersByQuery(ctx context.Context, query string) ([]*UserRecord, error)
 	IsAdmin(ctx context.Context, userID int64) (bool, error)
 }
@@ -64,23 +66,18 @@ func (s *Service) Signup(ctx context.Context, input *SignupInput) (*AuthResult, 
 
 	// Create user
 	user := &UserRecord{
-		FirstName:      input.FirstName,
-		LastName:       input.LastName,
-		Username:       input.Username,
-		HashedPassword: hashedPassword,
+		FirstName:         input.FirstName,
+		LastName:          input.LastName,
+		Username:          input.Username,
+		HashedPassword:    hashedPassword,
+		IsAcceptedByAdmin: false,
 	}
 
 	if err := s.userRepo.CreateUser(ctx, user); err != nil {
 		return nil, err
 	}
 
-	// Create session
-	token, err := s.sessionSvc.Create(ctx, user.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &AuthResult{User: userFromRecord(user), Token: token}, nil
+	return &AuthResult{User: userFromRecord(user), Token: ""}, nil
 }
 
 func (s *Service) Signin(ctx context.Context, input *SigninInput) (*AuthResult, error) {
@@ -101,6 +98,9 @@ func (s *Service) Signin(ctx context.Context, input *SigninInput) (*AuthResult, 
 	if !verifyPassword(user.HashedPassword, input.Password) {
 		return nil, ErrInvalidPassword
 	}
+	if !user.IsAcceptedByAdmin {
+		return nil, ErrUserPendingApproval
+	}
 
 	// Create session
 	token, err := s.sessionSvc.Create(ctx, user.ID)
@@ -109,6 +109,31 @@ func (s *Service) Signin(ctx context.Context, input *SigninInput) (*AuthResult, 
 	}
 
 	return &AuthResult{User: userFromRecord(user), Token: token}, nil
+}
+
+func (s *Service) ApproveUser(ctx context.Context, adminUserID, userID int64) (*User, error) {
+	isAdmin, err := s.userRepo.IsAdmin(ctx, adminUserID)
+	if err != nil {
+		return nil, err
+	}
+	if !isAdmin {
+		return nil, ErrAdminAccessRequired
+	}
+
+	if _, err := s.userRepo.FindUserByID(ctx, userID); err != nil {
+		return nil, err
+	}
+
+	if err := s.userRepo.ApproveUserByID(ctx, userID); err != nil {
+		return nil, err
+	}
+
+	updatedUser, err := s.userRepo.FindUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return userFromRecord(updatedUser), nil
 }
 
 func (s *Service) SearchPlayers(ctx context.Context, query string) (*SearchPlayersResult, error) {

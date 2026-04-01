@@ -9,6 +9,18 @@ import (
 )
 
 type FakeUserRepository struct {
+	ApproveUserByIDStub        func(context.Context, int64) error
+	approveUserByIDMutex       sync.RWMutex
+	approveUserByIDArgsForCall []struct {
+		arg1 context.Context
+		arg2 int64
+	}
+	approveUserByIDReturns struct {
+		result1 error
+	}
+	approveUserByIDReturnsOnCall map[int]struct {
+		result1 error
+	}
 	CreateUserStub        func(context.Context, *auth.UserRecord) error
 	createUserMutex       sync.RWMutex
 	createUserArgsForCall []struct {
@@ -20,6 +32,20 @@ type FakeUserRepository struct {
 	}
 	createUserReturnsOnCall map[int]struct {
 		result1 error
+	}
+	FindUserByIDStub        func(context.Context, int64) (*auth.UserRecord, error)
+	findUserByIDMutex       sync.RWMutex
+	findUserByIDArgsForCall []struct {
+		arg1 context.Context
+		arg2 int64
+	}
+	findUserByIDReturns struct {
+		result1 *auth.UserRecord
+		result2 error
+	}
+	findUserByIDReturnsOnCall map[int]struct {
+		result1 *auth.UserRecord
+		result2 error
 	}
 	FindUserByUsernameStub        func(context.Context, string) (*auth.UserRecord, error)
 	findUserByUsernameMutex       sync.RWMutex
@@ -65,6 +91,68 @@ type FakeUserRepository struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeUserRepository) ApproveUserByID(arg1 context.Context, arg2 int64) error {
+	fake.approveUserByIDMutex.Lock()
+	ret, specificReturn := fake.approveUserByIDReturnsOnCall[len(fake.approveUserByIDArgsForCall)]
+	fake.approveUserByIDArgsForCall = append(fake.approveUserByIDArgsForCall, struct {
+		arg1 context.Context
+		arg2 int64
+	}{arg1, arg2})
+	stub := fake.ApproveUserByIDStub
+	fakeReturns := fake.approveUserByIDReturns
+	fake.recordInvocation("ApproveUserByID", []interface{}{arg1, arg2})
+	fake.approveUserByIDMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *FakeUserRepository) ApproveUserByIDCallCount() int {
+	fake.approveUserByIDMutex.RLock()
+	defer fake.approveUserByIDMutex.RUnlock()
+	return len(fake.approveUserByIDArgsForCall)
+}
+
+func (fake *FakeUserRepository) ApproveUserByIDCalls(stub func(context.Context, int64) error) {
+	fake.approveUserByIDMutex.Lock()
+	defer fake.approveUserByIDMutex.Unlock()
+	fake.ApproveUserByIDStub = stub
+}
+
+func (fake *FakeUserRepository) ApproveUserByIDArgsForCall(i int) (context.Context, int64) {
+	fake.approveUserByIDMutex.RLock()
+	defer fake.approveUserByIDMutex.RUnlock()
+	argsForCall := fake.approveUserByIDArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeUserRepository) ApproveUserByIDReturns(result1 error) {
+	fake.approveUserByIDMutex.Lock()
+	defer fake.approveUserByIDMutex.Unlock()
+	fake.ApproveUserByIDStub = nil
+	fake.approveUserByIDReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeUserRepository) ApproveUserByIDReturnsOnCall(i int, result1 error) {
+	fake.approveUserByIDMutex.Lock()
+	defer fake.approveUserByIDMutex.Unlock()
+	fake.ApproveUserByIDStub = nil
+	if fake.approveUserByIDReturnsOnCall == nil {
+		fake.approveUserByIDReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.approveUserByIDReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeUserRepository) CreateUser(arg1 context.Context, arg2 *auth.UserRecord) error {
@@ -127,6 +215,71 @@ func (fake *FakeUserRepository) CreateUserReturnsOnCall(i int, result1 error) {
 	fake.createUserReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *FakeUserRepository) FindUserByID(arg1 context.Context, arg2 int64) (*auth.UserRecord, error) {
+	fake.findUserByIDMutex.Lock()
+	ret, specificReturn := fake.findUserByIDReturnsOnCall[len(fake.findUserByIDArgsForCall)]
+	fake.findUserByIDArgsForCall = append(fake.findUserByIDArgsForCall, struct {
+		arg1 context.Context
+		arg2 int64
+	}{arg1, arg2})
+	stub := fake.FindUserByIDStub
+	fakeReturns := fake.findUserByIDReturns
+	fake.recordInvocation("FindUserByID", []interface{}{arg1, arg2})
+	fake.findUserByIDMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeUserRepository) FindUserByIDCallCount() int {
+	fake.findUserByIDMutex.RLock()
+	defer fake.findUserByIDMutex.RUnlock()
+	return len(fake.findUserByIDArgsForCall)
+}
+
+func (fake *FakeUserRepository) FindUserByIDCalls(stub func(context.Context, int64) (*auth.UserRecord, error)) {
+	fake.findUserByIDMutex.Lock()
+	defer fake.findUserByIDMutex.Unlock()
+	fake.FindUserByIDStub = stub
+}
+
+func (fake *FakeUserRepository) FindUserByIDArgsForCall(i int) (context.Context, int64) {
+	fake.findUserByIDMutex.RLock()
+	defer fake.findUserByIDMutex.RUnlock()
+	argsForCall := fake.findUserByIDArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeUserRepository) FindUserByIDReturns(result1 *auth.UserRecord, result2 error) {
+	fake.findUserByIDMutex.Lock()
+	defer fake.findUserByIDMutex.Unlock()
+	fake.FindUserByIDStub = nil
+	fake.findUserByIDReturns = struct {
+		result1 *auth.UserRecord
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeUserRepository) FindUserByIDReturnsOnCall(i int, result1 *auth.UserRecord, result2 error) {
+	fake.findUserByIDMutex.Lock()
+	defer fake.findUserByIDMutex.Unlock()
+	fake.FindUserByIDStub = nil
+	if fake.findUserByIDReturnsOnCall == nil {
+		fake.findUserByIDReturnsOnCall = make(map[int]struct {
+			result1 *auth.UserRecord
+			result2 error
+		})
+	}
+	fake.findUserByIDReturnsOnCall[i] = struct {
+		result1 *auth.UserRecord
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeUserRepository) FindUserByUsername(arg1 context.Context, arg2 string) (*auth.UserRecord, error) {

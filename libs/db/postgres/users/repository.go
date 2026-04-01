@@ -24,14 +24,15 @@ func NewRepository(db *bun.DB) (*Repository, error) {
 
 func (r *Repository) CreateUser(ctx context.Context, user *auth.UserRecord) error {
 	model := &models.User{
-		ID:             user.ID,
-		FirstName:      user.FirstName,
-		LastName:       user.LastName,
-		Username:       user.Username,
-		HashedPassword: user.HashedPassword,
-		IsAdmin:        user.IsAdmin,
-		CreatedAt:      user.CreatedAt,
-		UpdatedAt:      user.UpdatedAt,
+		ID:                user.ID,
+		FirstName:         user.FirstName,
+		LastName:          user.LastName,
+		Username:          user.Username,
+		HashedPassword:    user.HashedPassword,
+		IsAdmin:           user.IsAdmin,
+		IsAcceptedByAdmin: user.IsAcceptedByAdmin,
+		CreatedAt:         user.CreatedAt,
+		UpdatedAt:         user.UpdatedAt,
 	}
 
 	_, err := r.db.NewInsert().Model(model).Exec(ctx)
@@ -43,6 +44,33 @@ func (r *Repository) CreateUser(ctx context.Context, user *auth.UserRecord) erro
 	user.CreatedAt = model.CreatedAt
 	user.UpdatedAt = model.UpdatedAt
 	return err
+}
+
+func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*auth.UserRecord, error) {
+	model := new(models.User)
+	err := r.db.NewSelect().
+		Model(model).
+		Where("id = ?", userID).
+		Limit(1).
+		Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, auth.ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	return &auth.UserRecord{
+		ID:                model.ID,
+		FirstName:         model.FirstName,
+		LastName:          model.LastName,
+		Username:          model.Username,
+		HashedPassword:    model.HashedPassword,
+		IsAdmin:           model.IsAdmin,
+		IsAcceptedByAdmin: model.IsAcceptedByAdmin,
+		CreatedAt:         model.CreatedAt,
+		UpdatedAt:         model.UpdatedAt,
+	}, nil
 }
 
 func (r *Repository) FindUserByUsername(ctx context.Context, username string) (*auth.UserRecord, error) {
@@ -60,15 +88,26 @@ func (r *Repository) FindUserByUsername(ctx context.Context, username string) (*
 	}
 
 	return &auth.UserRecord{
-		ID:             model.ID,
-		FirstName:      model.FirstName,
-		LastName:       model.LastName,
-		Username:       model.Username,
-		HashedPassword: model.HashedPassword,
-		IsAdmin:        model.IsAdmin,
-		CreatedAt:      model.CreatedAt,
-		UpdatedAt:      model.UpdatedAt,
+		ID:                model.ID,
+		FirstName:         model.FirstName,
+		LastName:          model.LastName,
+		Username:          model.Username,
+		HashedPassword:    model.HashedPassword,
+		IsAdmin:           model.IsAdmin,
+		IsAcceptedByAdmin: model.IsAcceptedByAdmin,
+		CreatedAt:         model.CreatedAt,
+		UpdatedAt:         model.UpdatedAt,
 	}, nil
+}
+
+func (r *Repository) ApproveUserByID(ctx context.Context, userID int64) error {
+	_, err := r.db.NewUpdate().
+		Model((*models.User)(nil)).
+		Set("accepted_by_admin = ?", true).
+		Set("updated_at = current_timestamp").
+		Where("id = ?", userID).
+		Exec(ctx)
+	return err
 }
 
 func (r *Repository) SearchUsersByQuery(ctx context.Context, query string) ([]*auth.UserRecord, error) {
@@ -89,14 +128,15 @@ func (r *Repository) SearchUsersByQuery(ctx context.Context, query string) ([]*a
 	for i := range modelsList {
 		user := modelsList[i]
 		result = append(result, &auth.UserRecord{
-			ID:             user.ID,
-			FirstName:      user.FirstName,
-			LastName:       user.LastName,
-			Username:       user.Username,
-			HashedPassword: user.HashedPassword,
-			IsAdmin:        user.IsAdmin,
-			CreatedAt:      user.CreatedAt,
-			UpdatedAt:      user.UpdatedAt,
+			ID:                user.ID,
+			FirstName:         user.FirstName,
+			LastName:          user.LastName,
+			Username:          user.Username,
+			HashedPassword:    user.HashedPassword,
+			IsAdmin:           user.IsAdmin,
+			IsAcceptedByAdmin: user.IsAcceptedByAdmin,
+			CreatedAt:         user.CreatedAt,
+			UpdatedAt:         user.UpdatedAt,
 		})
 	}
 
