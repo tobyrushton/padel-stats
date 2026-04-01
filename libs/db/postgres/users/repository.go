@@ -103,7 +103,7 @@ func (r *Repository) FindUserByUsername(ctx context.Context, username string) (*
 func (r *Repository) ApproveUserByID(ctx context.Context, userID int64) error {
 	_, err := r.db.NewUpdate().
 		Model((*models.User)(nil)).
-		Set("accepted_by_admin = ?", true).
+		Set("is_accepted_by_admin = ?", true).
 		Set("updated_at = current_timestamp").
 		Where("id = ?", userID).
 		Exec(ctx)

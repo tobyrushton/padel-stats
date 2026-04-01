@@ -15,7 +15,7 @@ type User struct {
 	Username          string    `bun:"username,notnull,unique"`
 	HashedPassword    string    `bun:"hashed_password,notnull"`
 	IsAdmin           bool      `bun:"is_admin,notnull,default:false"`
-	IsAcceptedByAdmin bool      `bun:"accepted_by_admin,notnull,default:false"`
+	IsAcceptedByAdmin bool      `bun:"is_accepted_by_admin,notnull,default:false"`
 	CreatedAt         time.Time `bun:"created_at,notnull,default:current_timestamp"`
 	UpdatedAt         time.Time `bun:"updated_at,notnull,default:current_timestamp"`
 }

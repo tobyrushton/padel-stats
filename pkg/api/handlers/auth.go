@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -88,6 +89,7 @@ func (h *AuthHandler) Signin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := h.authService.Signin(r.Context(), &input)
+	fmt.Println(result, err)
 	if err != nil {
 		handleAuthError(w, err)
 		return
