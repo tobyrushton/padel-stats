@@ -9,20 +9,23 @@ jobs:
         runs-on: ubuntu-latest
         
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
             
             - name: Set up Go
-              uses: actions/setup-go@v4
+              uses: actions/setup-go@v6
               with:
                 go-version-file: go.mod
             
             - name: Set up Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                 node-version-file: package.json
             
             - name: Install dependencies
               run: npm install
+
+            - name: Install Frontend Dependencies
+              run: cd pkg/www && npm install
 
             - name: Deploy to production
               run: npx sst deploy --stage production
