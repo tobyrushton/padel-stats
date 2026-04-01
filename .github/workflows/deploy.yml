@@ -7,7 +7,16 @@ on:
 jobs:
     deploy:
         runs-on: ubuntu-latest
-        
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }}
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+
         steps:
             - uses: actions/checkout@v6
             
@@ -29,24 +38,9 @@ jobs:
 
             - name: Deploy to production
               run: npx sst deploy --stage production
-              env:
-                AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }}
-                NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-                CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-                CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
-                JWT_SECRET: ${{ secrets.JWT_SECRET }}
-                JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
             
             - name: Init DB migrations
               run: npx sst shell --stage production go run ./cmd/migrate init
-              env:
-                NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }}
-                NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
 
             - name: Apply DB migrations
               run: npx sst shell --stage production go run ./cmd/migrate migrate
-              env:
-                NEON_ORG_ID: ${{ secrets.NEON_ORG_ID }}
-                NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
