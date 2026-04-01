@@ -161,6 +161,30 @@ definitions:
       wins:
         type: integer
     type: object
+  seasons.CreateSeasonInput:
+    properties:
+      name:
+        type: string
+      startDate:
+        format: date
+        type: string
+    required:
+    - name
+    - startDate
+    type: object
+  seasons.Season:
+    properties:
+      endDate:
+        format: date
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      startDate:
+        format: date
+        type: string
+    type: object
 info:
   contact: {}
   description: API for authentication and padel stats workflows.
@@ -402,6 +426,62 @@ paths:
       summary: Search players
       tags:
       - players
+  /seasons:
+    get:
+      description: Retrieve all seasons.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/seasons.Season'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: List seasons
+      tags:
+      - seasons
+    post:
+      consumes:
+      - application/json
+      description: Create a new season. Requires an authenticated admin user.
+      parameters:
+      - description: Create season payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/seasons.CreateSeasonInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/seasons.Season'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Create season
+      tags:
+      - seasons
   /seasons/{seasonID}/leaderboard:
     get:
       description: Retrieve leaderboard standings derived from game score difference
@@ -432,6 +512,23 @@ paths:
       summary: Get season leaderboard
       tags:
       - leaderboard
+  /seasons/active:
+    get:
+      description: Retrieve the currently active season.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/seasons.Season'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get active season
+      tags:
+      - seasons
 schemes:
 - https
 - http
