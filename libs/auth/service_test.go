@@ -161,6 +161,31 @@ func (suite *AuthServiceTestSuite) TestSignin_UserPendingApproval() {
 	assert.Equal(suite.T(), 0, suite.sessionSvc.CreateCallCount())
 }
 
+func (suite *AuthServiceTestSuite) TestGetCurrentUser_Success() {
+	suite.userRepo.FindUserByIDStub = func(ctx context.Context, userID int64) (*auth.UserRecord, error) {
+		assert.Equal(suite.T(), int64(22), userID)
+		return &auth.UserRecord{ID: userID, Username: "jane", IsAdmin: true}, nil
+	}
+
+	user, err := suite.service.GetCurrentUser(suite.ctx, 22)
+
+	assert.NoError(suite.T(), err)
+	assert.NotNil(suite.T(), user)
+	assert.Equal(suite.T(), int64(22), user.ID)
+	assert.True(suite.T(), user.IsAdmin)
+}
+
+func (suite *AuthServiceTestSuite) TestGetCurrentUser_UserNotFound() {
+	suite.userRepo.FindUserByIDStub = func(ctx context.Context, userID int64) (*auth.UserRecord, error) {
+		return nil, auth.ErrUserNotFound
+	}
+
+	user, err := suite.service.GetCurrentUser(suite.ctx, 22)
+
+	assert.ErrorIs(suite.T(), err, auth.ErrUserNotFound)
+	assert.Nil(suite.T(), user)
+}
+
 func (suite *AuthServiceTestSuite) TestApproveUser_Success() {
 	suite.userRepo.IsAdminStub = func(ctx context.Context, userID int64) (bool, error) {
 		assert.Equal(suite.T(), int64(10), userID)

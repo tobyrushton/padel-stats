@@ -3,25 +3,54 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { clearAuthToken, getAuthToken } from "@/lib/auth-token"
 import { clearAuthUser, getAuthUser } from "@/lib/auth-user"
+import { fetchCurrentUserFromServer } from "@/lib/current-user"
 
 export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    const syncAuthState = () => {
-      setIsLoggedIn(Boolean(getAuthToken()))
-      setIsAdmin(Boolean(getAuthUser()?.isAdmin))
+    let cancelled = false
+
+    const syncAuthState = async () => {
+      const token = getAuthToken()
+      if (!token) {
+        if (!cancelled) {
+          setIsLoggedIn(false)
+          setIsAdmin(false)
+        }
+        return
+      }
+
+      try {
+        const user = await fetchCurrentUserFromServer()
+        if (cancelled) {
+          return
+        }
+
+        setIsLoggedIn(Boolean(user))
+        setIsAdmin(Boolean(user?.isAdmin))
+      } catch {
+        if (!cancelled) {
+          setIsLoggedIn(true)
+          setIsAdmin(Boolean(getAuthUser()?.isAdmin))
+        }
+      }
     }
 
-    syncAuthState()
+    void syncAuthState()
 
-    window.addEventListener("storage", syncAuthState)
-    window.addEventListener("focus", syncAuthState)
+    const handleAuthChange = () => {
+      void syncAuthState()
+    }
+
+    window.addEventListener("storage", handleAuthChange)
+    window.addEventListener("focus", handleAuthChange)
 
     return () => {
-      window.removeEventListener("storage", syncAuthState)
-      window.removeEventListener("focus", syncAuthState)
+      cancelled = true
+      window.removeEventListener("storage", handleAuthChange)
+      window.removeEventListener("focus", handleAuthChange)
     }
   }, [])
 

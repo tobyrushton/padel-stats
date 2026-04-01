@@ -233,6 +233,31 @@ paths:
       summary: Approve user
       tags:
       - auth
+  /auth/me:
+    get:
+      description: Retrieve the authenticated user from the active session token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get current user
+      tags:
+      - auth
   /auth/signin:
     post:
       consumes:

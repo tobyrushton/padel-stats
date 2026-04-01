@@ -7,6 +7,7 @@ type JsonContent<T> = T extends { content: { "application/json": infer TJson } }
 
 type SigninOperation = NonNullable<paths["/auth/signin"]["post"]>
 type SignupOperation = NonNullable<paths["/auth/signup"]["post"]>
+type GetCurrentUserOperation = NonNullable<paths["/auth/me"]["get"]>
 type ApproveUserOperation = NonNullable<
   paths["/admin/users/{userID}/approve"]["post"]
 >
@@ -25,6 +26,7 @@ export type SigninInput = JsonContent<SigninOperation["requestBody"]>
 export type SignupInput = JsonContent<SignupOperation["requestBody"]>
 export type AuthResult = JsonContent<SigninOperation["responses"][200]>
 export type User = components["schemas"]["auth.User"]
+export type CurrentUser = JsonContent<GetCurrentUserOperation["responses"][200]>
 export type CreateGameInput = JsonContent<CreateGameOperation["requestBody"]>
 export type Game = JsonContent<GetGameByIDOperation["responses"][200]>
 export type PlayerGames = JsonContent<ListGamesForPlayerOperation["responses"][200]>
@@ -95,6 +97,14 @@ export class ApiClient {
       method: "POST",
       body: input,
       expectedStatus: [201],
+    })
+  }
+
+  async getCurrentUser(): Promise<CurrentUser> {
+    return this.request<undefined, CurrentUser, ErrorResponse>({
+      path: "/auth/me",
+      method: "GET",
+      expectedStatus: [200],
     })
   }
 

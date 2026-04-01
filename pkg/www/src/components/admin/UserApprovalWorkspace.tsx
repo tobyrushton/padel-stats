@@ -9,8 +9,7 @@ import {
   type ErrorResponse,
   type User,
 } from "@/lib/api-client"
-import { getAuthToken } from "@/lib/auth-token"
-import { getAuthUser } from "@/lib/auth-user"
+import { fetchCurrentUserFromServer } from "@/lib/current-user"
 
 interface UserApprovalWorkspaceProps {
   apiBaseUrl: string
@@ -43,13 +42,13 @@ export default function UserApprovalWorkspace({ apiBaseUrl }: UserApprovalWorksp
   const apiClient = useMemo(() => createApiClient(apiBaseUrl), [apiBaseUrl])
   const [query, setQuery] = useState("")
   const [users, setUsers] = useState<(User & { id: number })[]>([])
+  const [isAuthorizing, setIsAuthorizing] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmittingByID, setIsSubmittingByID] = useState<Record<number, boolean>>({})
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-
-  const isLoggedIn = Boolean(getAuthToken())
-  const isAdmin = Boolean(getAuthUser()?.isAdmin)
 
   const pendingUsers = users.filter((user) => user.isAcceptedByAdmin !== true)
 
@@ -70,7 +69,44 @@ export default function UserApprovalWorkspace({ apiBaseUrl }: UserApprovalWorksp
   }
 
   useEffect(() => {
-    void loadUsers()
+    let cancelled = false
+
+    const bootstrap = async () => {
+      try {
+        setIsAuthorizing(true)
+        const user = await fetchCurrentUserFromServer(apiBaseUrl)
+        if (cancelled) {
+          return
+        }
+
+        if (!user) {
+          setIsLoggedIn(false)
+          setIsAdmin(false)
+          setUsers([])
+          return
+        }
+
+        setIsLoggedIn(true)
+        setIsAdmin(Boolean(user.isAdmin))
+
+        if (!user.isAdmin) {
+          setUsers([])
+          return
+        }
+
+        await loadUsers()
+      } finally {
+        if (!cancelled) {
+          setIsAuthorizing(false)
+        }
+      }
+    }
+
+    void bootstrap()
+
+    return () => {
+      cancelled = true
+    }
   }, [apiClient])
 
   const handleSearch = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -93,6 +129,17 @@ export default function UserApprovalWorkspace({ apiBaseUrl }: UserApprovalWorksp
     } finally {
       setIsSubmittingByID((current) => ({ ...current, [userID]: false }))
     }
+  }
+
+  if (isAuthorizing) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-6">
+          <h1 className="text-xl font-semibold">Admin approvals</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Verifying access...</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   if (!isLoggedIn) {

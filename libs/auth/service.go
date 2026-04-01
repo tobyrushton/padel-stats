@@ -111,6 +111,19 @@ func (s *Service) Signin(ctx context.Context, input *SigninInput) (*AuthResult, 
 	return &AuthResult{User: userFromRecord(user), Token: token}, nil
 }
 
+func (s *Service) GetCurrentUser(ctx context.Context, userID int64) (*User, error) {
+	if userID <= 0 {
+		return nil, ErrUserNotFound
+	}
+
+	user, err := s.userRepo.FindUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return userFromRecord(user), nil
+}
+
 func (s *Service) ApproveUser(ctx context.Context, adminUserID, userID int64) (*User, error) {
 	isAdmin, err := s.userRepo.IsAdmin(ctx, adminUserID)
 	if err != nil {

@@ -16,10 +16,11 @@ import (
 )
 
 type fakeAuthService struct {
-	signupFn        func(context.Context, *auth.SignupInput) (*auth.AuthResult, error)
-	signinFn        func(context.Context, *auth.SigninInput) (*auth.AuthResult, error)
-	searchPlayersFn func(context.Context, string) (*auth.SearchPlayersResult, error)
-	approveUserFn   func(context.Context, int64, int64) (*auth.User, error)
+	signupFn         func(context.Context, *auth.SignupInput) (*auth.AuthResult, error)
+	signinFn         func(context.Context, *auth.SigninInput) (*auth.AuthResult, error)
+	getCurrentUserFn func(context.Context, int64) (*auth.User, error)
+	searchPlayersFn  func(context.Context, string) (*auth.SearchPlayersResult, error)
+	approveUserFn    func(context.Context, int64, int64) (*auth.User, error)
 }
 
 func (f *fakeAuthService) Signup(ctx context.Context, input *auth.SignupInput) (*auth.AuthResult, error) {
@@ -34,6 +35,14 @@ func (f *fakeAuthService) Signin(ctx context.Context, input *auth.SigninInput) (
 		return nil, errors.New("signin function not configured")
 	}
 	return f.signinFn(ctx, input)
+}
+
+func (f *fakeAuthService) GetCurrentUser(ctx context.Context, userID int64) (*auth.User, error) {
+	if f.getCurrentUserFn == nil {
+		return nil, errors.New("get current user function not configured")
+	}
+
+	return f.getCurrentUserFn(ctx, userID)
 }
 
 func (f *fakeAuthService) SearchPlayers(ctx context.Context, query string) (*auth.SearchPlayersResult, error) {
@@ -109,6 +118,81 @@ func TestSigninBadBody(t *testing.T) {
 	h.Signin(w, r)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestGetCurrentUserSuccess(t *testing.T) {
+	h := NewAuthHandler(&fakeAuthService{
+		getCurrentUserFn: func(ctx context.Context, userID int64) (*auth.User, error) {
+			assert.Equal(t, int64(99), userID)
+			return &auth.User{ID: userID, Username: "admin-user", IsAdmin: true}, nil
+		},
+	}, &fakeSessionValidator{
+		validateFn: func(ctx context.Context, tokenString string) (*models.Session, error) {
+			assert.Equal(t, "token-value", tokenString)
+			return &models.Session{UserID: 99}, nil
+		},
+	})
+
+	r := httptest.NewRequest(http.MethodGet, "/auth/me", nil)
+	r.Header.Set("Authorization", "Bearer token-value")
+	w := httptest.NewRecorder()
+
+	h.GetCurrentUser(w, r)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var got auth.User
+	err := json.NewDecoder(w.Body).Decode(&got)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(99), got.ID)
+	assert.True(t, got.IsAdmin)
+}
+
+func TestGetCurrentUserUnauthorizedWithoutToken(t *testing.T) {
+	h := NewAuthHandler(&fakeAuthService{}, &fakeSessionValidator{})
+
+	r := httptest.NewRequest(http.MethodGet, "/auth/me", nil)
+	w := httptest.NewRecorder()
+
+	h.GetCurrentUser(w, r)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestGetCurrentUserInvalidSession(t *testing.T) {
+	h := NewAuthHandler(&fakeAuthService{}, &fakeSessionValidator{
+		validateFn: func(ctx context.Context, tokenString string) (*models.Session, error) {
+			return nil, errors.New("invalid")
+		},
+	})
+
+	r := httptest.NewRequest(http.MethodGet, "/auth/me", nil)
+	r.Header.Set("Authorization", "Bearer token-value")
+	w := httptest.NewRecorder()
+
+	h.GetCurrentUser(w, r)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestGetCurrentUserUserNotFound(t *testing.T) {
+	h := NewAuthHandler(&fakeAuthService{
+		getCurrentUserFn: func(ctx context.Context, userID int64) (*auth.User, error) {
+			return nil, auth.ErrUserNotFound
+		},
+	}, &fakeSessionValidator{
+		validateFn: func(ctx context.Context, tokenString string) (*models.Session, error) {
+			return &models.Session{UserID: 99}, nil
+		},
+	})
+
+	r := httptest.NewRequest(http.MethodGet, "/auth/me", nil)
+	r.Header.Set("Authorization", "Bearer token-value")
+	w := httptest.NewRecorder()
+
+	h.GetCurrentUser(w, r)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestSearchPlayersSuccess(t *testing.T) {

@@ -15,6 +15,7 @@ import (
 type AuthService interface {
 	Signup(ctx context.Context, input *auth.SignupInput) (*auth.AuthResult, error)
 	Signin(ctx context.Context, input *auth.SigninInput) (*auth.AuthResult, error)
+	GetCurrentUser(ctx context.Context, userID int64) (*auth.User, error)
 	SearchPlayers(ctx context.Context, query string) (*auth.SearchPlayersResult, error)
 	ApproveUser(ctx context.Context, adminUserID, userID int64) (*auth.User, error)
 }
@@ -32,6 +33,7 @@ func (h *AuthHandler) RegisterRoutes(r chi.Router) {
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/signup", h.Signup)
 		r.Post("/signin", h.Signin)
+		r.Get("/me", h.GetCurrentUser)
 	})
 
 	r.Route("/players", func(r chi.Router) {
@@ -96,6 +98,38 @@ func (h *AuthHandler) Signin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, result)
+}
+
+// GetCurrentUser returns the authenticated user associated with the bearer token.
+// @Summary Get current user
+// @Description Retrieve the authenticated user from the active session token.
+// @Tags auth
+// @Produce json
+// @Success 200 {object} auth.User
+// @Failure 401 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /auth/me [get]
+func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	tokenString := bearerTokenFromHeader(r.Header.Get("Authorization"))
+	if tokenString == "" {
+		writeError(w, http.StatusUnauthorized, "missing authorization token")
+		return
+	}
+
+	session, err := h.sessionValidator.Validate(r.Context(), tokenString)
+	if err != nil || session == nil || session.UserID <= 0 {
+		writeError(w, http.StatusUnauthorized, "invalid session")
+		return
+	}
+
+	user, err := h.authService.GetCurrentUser(r.Context(), session.UserID)
+	if err != nil {
+		handleAuthError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, user)
 }
 
 // SearchPlayers returns players matching a query.
