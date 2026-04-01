@@ -1,0 +1,21 @@
+---
+import { Resource } from "sst"
+import "@/styles/global.css"
+import Header from "@/components/site/Header"
+import UserApprovalWorkspace from "@/components/admin/UserApprovalWorkspace"
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Admin Approvals | Padel Stats</title>
+  </head>
+  <body class="min-h-screen bg-background text-foreground">
+    <Header client:load />
+    <main class="mx-auto flex w-full max-w-6xl flex-1 px-4 py-10">
+      <UserApprovalWorkspace client:load apiBaseUrl={Resource.API.url} />
+    </main>
+  </body>
+</html>

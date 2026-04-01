@@ -2,14 +2,16 @@ import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { clearAuthToken, getAuthToken } from "@/lib/auth-token"
-import { clearAuthUser } from "@/lib/auth-user"
+import { clearAuthUser, getAuthUser } from "@/lib/auth-user"
 
 export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const syncAuthState = () => {
       setIsLoggedIn(Boolean(getAuthToken()))
+      setIsAdmin(Boolean(getAuthUser()?.isAdmin))
     }
 
     syncAuthState()
@@ -27,6 +29,7 @@ export default function Header() {
     clearAuthToken()
     clearAuthUser()
     setIsLoggedIn(false)
+    setIsAdmin(false)
     window.location.assign("/auth/signin")
   }
 
@@ -46,6 +49,11 @@ export default function Header() {
               <Button asChild variant="ghost" size="sm">
                 <a href="/leaderboard">Leaderboard</a>
               </Button>
+              {isAdmin ? (
+                <Button asChild variant="ghost" size="sm">
+                  <a href="/admin/users">Admin</a>
+                </Button>
+              ) : null}
               <Button type="button" variant="outline" size="sm" onClick={handleLogout}>
                 Log out
               </Button>

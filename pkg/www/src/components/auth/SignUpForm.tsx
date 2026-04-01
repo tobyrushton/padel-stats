@@ -6,7 +6,7 @@ import {
   type ErrorResponse,
   type SignupInput,
 } from "@/lib/api-client"
-import { setAuthToken } from "@/lib/auth-token"
+import { clearAuthToken, setAuthToken } from "@/lib/auth-token"
 import { setAuthUser } from "@/lib/auth-user"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,10 +20,12 @@ const SIGNUP_INITIAL_STATE: SignupInput = {
 }
 
 function getSignUpErrorMessage(error: unknown): string {
-    console.log("Error during sign up:", error)
   if (error instanceof ApiError) {
     const body = error.body as ErrorResponse | undefined
     if (body?.error) {
+      if (body.error === "user pending admin approval") {
+        return "Your account is pending admin approval."
+      }
       return body.error
     }
 
@@ -33,6 +35,10 @@ function getSignUpErrorMessage(error: unknown): string {
 
     if (error.status === 400) {
       return "Please review the form values and try again."
+    }
+
+    if (error.status === 403) {
+      return "Your account is pending admin approval."
     }
   }
 
@@ -48,6 +54,7 @@ export default function SignUpForm({ apiBaseUrl }: SignUpFormProps) {
   const [form, setForm] = useState<SignupInput>(SIGNUP_INITIAL_STATE)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const handleChange = (field: keyof SignupInput, value: string) => {
     setForm((current) => ({
@@ -59,6 +66,7 @@ export default function SignUpForm({ apiBaseUrl }: SignUpFormProps) {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setErrorMessage(null)
+    setSuccessMessage(null)
 
     if (!form.firstName || !form.lastName || !form.username || !form.password) {
       setErrorMessage("All fields are required.")
@@ -69,14 +77,22 @@ export default function SignUpForm({ apiBaseUrl }: SignUpFormProps) {
       setIsSubmitting(true)
       const result = await apiClient.signUp(form)
 
-      if (!result.token) {
-        setErrorMessage("Account created but no token was returned.")
+      if (!result.user) {
+        setErrorMessage("Account created but no user details were returned.")
         return
       }
 
-      setAuthToken(result.token)
-      setAuthUser(result.user)
-      window.location.assign("/")
+      if (result.token) {
+        setAuthToken(result.token)
+        setAuthUser(result.user)
+        window.location.assign("/")
+        return
+      }
+
+      clearAuthToken()
+      setAuthUser(null)
+      setForm(SIGNUP_INITIAL_STATE)
+      setSuccessMessage("Account created. Your account is pending admin approval. You can sign in after approval.")
     } catch (error) {
       setErrorMessage(getSignUpErrorMessage(error))
     } finally {
@@ -145,6 +161,12 @@ export default function SignUpForm({ apiBaseUrl }: SignUpFormProps) {
       {errorMessage ? (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {errorMessage}
+        </p>
+      ) : null}
+
+      {successMessage ? (
+        <p className="rounded-md border border-emerald-300/60 bg-emerald-100/60 px-3 py-2 text-sm text-emerald-800">
+          {successMessage}
         </p>
       ) : null}
 

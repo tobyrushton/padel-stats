@@ -7,6 +7,8 @@ interface StoredAuthUser {
   username?: string
   firstName?: string
   lastName?: string
+  isAdmin?: boolean
+  isAcceptedByAdmin?: boolean
 }
 
 function canUseStorage(): boolean {
@@ -48,6 +50,8 @@ export function setAuthUser(user: {
   username?: string
   firstName?: string
   lastName?: string
+  isAdmin?: boolean
+  isAcceptedByAdmin?: boolean
 } | null | undefined): void {
   if (!canUseStorage()) {
     return
@@ -63,6 +67,8 @@ export function setAuthUser(user: {
     username: user.username,
     firstName: user.firstName,
     lastName: user.lastName,
+    isAdmin: user.isAdmin,
+    isAcceptedByAdmin: user.isAcceptedByAdmin,
   }
 
   window.sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(payload))
