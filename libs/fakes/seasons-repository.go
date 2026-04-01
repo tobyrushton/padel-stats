@@ -9,11 +9,11 @@ import (
 )
 
 type FakeSeasonsRepository struct {
-	CreateSeasonStub        func(context.Context, *seasons.Season) (*seasons.Season, error)
+	CreateSeasonStub        func(context.Context, *seasons.CreateSeasonInput) (*seasons.Season, error)
 	createSeasonMutex       sync.RWMutex
 	createSeasonArgsForCall []struct {
 		arg1 context.Context
-		arg2 *seasons.Season
+		arg2 *seasons.CreateSeasonInput
 	}
 	createSeasonReturns struct {
 		result1 *seasons.Season
@@ -67,12 +67,12 @@ type FakeSeasonsRepository struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeSeasonsRepository) CreateSeason(arg1 context.Context, arg2 *seasons.Season) (*seasons.Season, error) {
+func (fake *FakeSeasonsRepository) CreateSeason(arg1 context.Context, arg2 *seasons.CreateSeasonInput) (*seasons.Season, error) {
 	fake.createSeasonMutex.Lock()
 	ret, specificReturn := fake.createSeasonReturnsOnCall[len(fake.createSeasonArgsForCall)]
 	fake.createSeasonArgsForCall = append(fake.createSeasonArgsForCall, struct {
 		arg1 context.Context
-		arg2 *seasons.Season
+		arg2 *seasons.CreateSeasonInput
 	}{arg1, arg2})
 	stub := fake.CreateSeasonStub
 	fakeReturns := fake.createSeasonReturns
@@ -93,13 +93,13 @@ func (fake *FakeSeasonsRepository) CreateSeasonCallCount() int {
 	return len(fake.createSeasonArgsForCall)
 }
 
-func (fake *FakeSeasonsRepository) CreateSeasonCalls(stub func(context.Context, *seasons.Season) (*seasons.Season, error)) {
+func (fake *FakeSeasonsRepository) CreateSeasonCalls(stub func(context.Context, *seasons.CreateSeasonInput) (*seasons.Season, error)) {
 	fake.createSeasonMutex.Lock()
 	defer fake.createSeasonMutex.Unlock()
 	fake.CreateSeasonStub = stub
 }
 
-func (fake *FakeSeasonsRepository) CreateSeasonArgsForCall(i int) (context.Context, *seasons.Season) {
+func (fake *FakeSeasonsRepository) CreateSeasonArgsForCall(i int) (context.Context, *seasons.CreateSeasonInput) {
 	fake.createSeasonMutex.RLock()
 	defer fake.createSeasonMutex.RUnlock()
 	argsForCall := fake.createSeasonArgsForCall[i]

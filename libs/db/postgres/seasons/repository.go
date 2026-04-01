@@ -45,13 +45,19 @@ func (r *Repository) GetActiveSeason(ctx context.Context) (*leaderboarddomain.Se
 	return season, nil
 }
 
-func (r *Repository) CreateSeason(ctx context.Context, season *leaderboarddomain.Season) (*leaderboarddomain.Season, error) {
-	_, err := r.db.NewInsert().Model(season).Exec(ctx)
+func (r *Repository) CreateSeason(ctx context.Context, season *leaderboarddomain.CreateSeasonInput) (*leaderboarddomain.Season, error) {
+	dbSeason := &leaderboarddomain.Season{
+		Name:      season.Name,
+		StartDate: season.StartDate,
+		EndDate:   time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC).String(),
+	}
+
+	_, err := r.db.NewInsert().Model(dbSeason).Exec(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return season, nil
+	return dbSeason, nil
 }
 
 func (r *Repository) EndSeason(ctx context.Context, seasonID int64) (*leaderboarddomain.Season, error) {

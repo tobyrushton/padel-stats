@@ -44,7 +44,7 @@ func (suite *ServiceTestSuite) TestGetSeasons_Success() {
 		return expectedSeasons, nil
 	}
 
-	seasons, err := suite.service.ListSeasons(suite.ctx)
+	seasons, err := suite.service.GetSeasons(suite.ctx)
 
 	suite.NoError(err)
 	suite.Equal(expectedSeasons, seasons)
