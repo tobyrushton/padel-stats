@@ -278,6 +278,89 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/handlers.ErrorResponse"
+  /seasons:
+    get:
+      description: Retrieve all seasons.
+      tags:
+        - seasons
+      summary: List seasons
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/seasons.Season"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+    post:
+      description: Create a new season. Requires an authenticated admin user.
+      tags:
+        - seasons
+      summary: Create season
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/seasons.CreateSeasonInput"
+        description: Create season payload
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/seasons.Season"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
+  /seasons/active:
+    get:
+      description: Retrieve the currently active season.
+      tags:
+        - seasons
+      summary: Get active season
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/seasons.Season"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/handlers.ErrorResponse"
   "/seasons/{seasonID}/leaderboard":
     get:
       description: Retrieve leaderboard standings derived from game score difference
@@ -478,3 +561,27 @@ components:
           type: string
         wins:
           type: integer
+    seasons.CreateSeasonInput:
+      type: object
+      required:
+        - name
+        - startDate
+      properties:
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+    seasons.Season:
+      type: object
+      properties:
+        endDate:
+          type: string
+          format: date
+        id:
+          type: integer
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date

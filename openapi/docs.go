@@ -370,6 +370,117 @@ const docTemplate = `{
                 }
             }
         },
+        "/seasons": {
+            "get": {
+                "description": "Retrieve all seasons.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "seasons"
+                ],
+                "summary": "List seasons",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/seasons.Season"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new season. Requires an authenticated admin user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "seasons"
+                ],
+                "summary": "Create season",
+                "parameters": [
+                    {
+                        "description": "Create season payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/seasons.CreateSeasonInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/seasons.Season"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/seasons/active": {
+            "get": {
+                "description": "Retrieve the currently active season.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "seasons"
+                ],
+                "summary": "Get active season",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/seasons.Season"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/seasons/{seasonID}/leaderboard": {
             "get": {
                 "description": "Retrieve leaderboard standings derived from game score difference for one season.",
@@ -649,6 +760,41 @@ const docTemplate = `{
                 },
                 "wins": {
                     "type": "integer"
+                }
+            }
+        },
+        "seasons.CreateSeasonInput": {
+            "type": "object",
+            "required": [
+                "name",
+                "startDate"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string",
+                    "format": "date"
+                }
+            }
+        },
+        "seasons.Season": {
+            "type": "object",
+            "properties": {
+                "endDate": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string",
+                    "format": "date"
                 }
             }
         }

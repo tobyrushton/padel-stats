@@ -16,13 +16,13 @@ import (
 
 type ServiceTestSuite struct {
 	suite.Suite
-	repo    *fakes.FakeRepository
+	repo    *fakes.FakeGamesRepository
 	service *games.Service
 	ctx     context.Context
 }
 
 func (suite *ServiceTestSuite) SetupTest() {
-	suite.repo = new(fakes.FakeRepository)
+	suite.repo = new(fakes.FakeGamesRepository)
 	suite.ctx = context.Background()
 
 	var err error

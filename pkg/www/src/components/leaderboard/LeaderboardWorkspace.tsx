@@ -2,8 +2,14 @@ import { useEffect, useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { createApiClient, type LeaderboardEntry } from "@/lib/api-client"
 
 import LeaderboardTable from "./LeaderboardTable"
@@ -14,13 +20,18 @@ interface LeaderboardWorkspaceProps {
   apiBaseUrl: string
 }
 
-function buildTitle(mode: FilterMode, seasonID: number | null): string {
+interface SeasonOption {
+  id: number
+  name: string
+}
+
+function buildTitle(mode: FilterMode, seasonName: string | null): string {
   if (mode === "all-time") {
     return "All-Time Leaderboard"
   }
 
-  if (seasonID) {
-    return `Season ${seasonID} Leaderboard`
+  if (seasonName) {
+    return `${seasonName} Leaderboard`
   }
 
   return "Season Leaderboard"
@@ -30,8 +41,10 @@ export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspac
   const apiClient = useMemo(() => createApiClient(apiBaseUrl), [apiBaseUrl])
 
   const [mode, setMode] = useState<FilterMode>("all-time")
-  const [seasonInput, setSeasonInput] = useState("1")
-  const [appliedSeasonID, setAppliedSeasonID] = useState<number | null>(1)
+  const [seasons, setSeasons] = useState<SeasonOption[]>([])
+  const [selectedSeasonID, setSelectedSeasonID] = useState<number | null>(null)
+  const [isLoadingSeasons, setIsLoadingSeasons] = useState(true)
+  const [seasonErrorMessage, setSeasonErrorMessage] = useState<string | null>(null)
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -41,18 +54,50 @@ export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspac
     setErrorMessage(null)
   }
 
-  const handleApplySeason = () => {
-    const parsed = Number.parseInt(seasonInput, 10)
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      setErrorMessage("Enter a valid season ID greater than 0.")
-      setEntries([])
-      setAppliedSeasonID(null)
-      return
+  useEffect(() => {
+    let isMounted = true
+
+    const loadSeasons = async () => {
+      try {
+        setIsLoadingSeasons(true)
+        setSeasonErrorMessage(null)
+
+        const result = await apiClient.listSeasons()
+        const normalized = result
+          .filter((season) => typeof season.id === "number" && season.id > 0)
+          .map((season) => ({
+            id: season.id as number,
+            name: typeof season.name === "string" && season.name.trim().length > 0
+              ? season.name.trim()
+              : `Season ${season.id as number}`,
+          }))
+          .sort((a, b) => b.id - a.id)
+
+        if (!isMounted) {
+          return
+        }
+
+        setSeasons(normalized)
+        setSelectedSeasonID(normalized.length > 0 ? normalized[0].id : null)
+      } catch {
+        if (isMounted) {
+          setSeasonErrorMessage("Could not load seasons right now.")
+          setSeasons([])
+          setSelectedSeasonID(null)
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingSeasons(false)
+        }
+      }
     }
 
-    setErrorMessage(null)
-    setAppliedSeasonID(parsed)
-  }
+    void loadSeasons()
+
+    return () => {
+      isMounted = false
+    }
+  }, [apiClient])
 
   useEffect(() => {
     let isMounted = true
@@ -66,20 +111,32 @@ export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspac
           const result = await apiClient.getAllTimeLeaderboard()
           if (isMounted) {
             setEntries(result)
-            setAppliedSeasonID(null)
           }
           return
         }
 
-        if (!appliedSeasonID || appliedSeasonID <= 0) {
+        if (isLoadingSeasons) {
           if (isMounted) {
-            setErrorMessage("Choose a season ID and apply the filter.")
             setEntries([])
           }
           return
         }
 
-        const result = await apiClient.getSeasonLeaderboard(appliedSeasonID)
+        if (seasonErrorMessage) {
+          if (isMounted) {
+            setEntries([])
+          }
+          return
+        }
+
+        if (!selectedSeasonID || selectedSeasonID <= 0) {
+          if (isMounted) {
+            setEntries([])
+          }
+          return
+        }
+
+        const result = await apiClient.getSeasonLeaderboard(selectedSeasonID)
         if (isMounted) {
           setEntries(result)
         }
@@ -100,9 +157,14 @@ export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspac
     return () => {
       isMounted = false
     }
-  }, [apiClient, mode, appliedSeasonID])
+  }, [apiClient, isLoadingSeasons, mode, seasonErrorMessage, selectedSeasonID])
 
-  const title = buildTitle(mode, appliedSeasonID)
+  const selectedSeasonName =
+    selectedSeasonID !== null
+      ? seasons.find((season) => season.id === selectedSeasonID)?.name ?? null
+      : null
+
+  const title = buildTitle(mode, selectedSeasonName)
 
   return (
     <section className="w-full space-y-6">
@@ -134,22 +196,34 @@ export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspac
           </div>
 
           {mode === "season" ? (
-            <div className="flex w-full max-w-xs items-center gap-2">
-              <Label htmlFor="season-id" className="sr-only">
-                Season ID
+            <div className="w-full max-w-xs space-y-2">
+              <Label htmlFor="season-select">
+                Season
               </Label>
-              <Input
-                id="season-id"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={seasonInput}
-                onChange={(event) => setSeasonInput(event.target.value)}
-                placeholder="Season ID"
-                aria-label="Season ID"
-              />
-              <Button type="button" variant="outline" onClick={handleApplySeason}>
-                Apply
-              </Button>
+              <Select
+                value={selectedSeasonID !== null ? String(selectedSeasonID) : undefined}
+                onValueChange={(value) => setSelectedSeasonID(Number.parseInt(value, 10))}
+                disabled={isLoadingSeasons || !!seasonErrorMessage || seasons.length === 0}
+              >
+                <SelectTrigger id="season-select" className="w-full">
+                  <SelectValue placeholder={isLoadingSeasons ? "Loading seasons..." : "Select season"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {seasons.map((season) => (
+                    <SelectItem key={season.id} value={String(season.id)}>
+                      {season.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {seasonErrorMessage ? (
+                <p className="text-sm text-destructive">{seasonErrorMessage}</p>
+              ) : null}
+
+              {!isLoadingSeasons && !seasonErrorMessage && seasons.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No seasons available yet.</p>
+              ) : null}
             </div>
           ) : null}
           </div>

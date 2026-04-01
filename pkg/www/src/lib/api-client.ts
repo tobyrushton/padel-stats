@@ -13,6 +13,9 @@ type DeleteGameByIDOperation = NonNullable<paths["/games/{gameID}"]["delete"]>
 type ListGamesForPlayerOperation = NonNullable<paths["/players/{playerID}/games"]["get"]>
 type SearchPlayersOperation = NonNullable<paths["/players/search"]["get"]>
 type GetAllTimeLeaderboardOperation = NonNullable<paths["/leaderboard"]["get"]>
+type ListSeasonsOperation = NonNullable<paths["/seasons"]["get"]>
+type CreateSeasonOperation = NonNullable<paths["/seasons"]["post"]>
+type GetActiveSeasonOperation = NonNullable<paths["/seasons/active"]["get"]>
 type GetSeasonLeaderboardOperation = NonNullable<paths["/seasons/{seasonID}/leaderboard"]["get"]>
 
 export type SigninInput = JsonContent<SigninOperation["requestBody"]>
@@ -25,6 +28,9 @@ export type SearchPlayer = components["schemas"]["auth.User"]
 export type SearchPlayersResult = JsonContent<SearchPlayersOperation["responses"][200]>
 export type LeaderboardEntries = JsonContent<GetAllTimeLeaderboardOperation["responses"][200]>
 export type LeaderboardEntry = LeaderboardEntries[number]
+export type Seasons = JsonContent<ListSeasonsOperation["responses"][200]>
+export type Season = Seasons[number]
+export type CreateSeasonInput = JsonContent<CreateSeasonOperation["requestBody"]>
 export type ErrorResponse = components["schemas"]["handlers.ErrorResponse"]
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
@@ -136,6 +142,31 @@ export class ApiClient {
       path: "/leaderboard",
       method: "GET",
       expectedStatus: [200],
+    })
+  }
+
+  async listSeasons(): Promise<Seasons> {
+    return this.request<undefined, Seasons, ErrorResponse>({
+      path: "/seasons",
+      method: "GET",
+      expectedStatus: [200],
+    })
+  }
+
+  async getActiveSeason(): Promise<Season> {
+    return this.request<undefined, Season, ErrorResponse>({
+      path: "/seasons/active",
+      method: "GET",
+      expectedStatus: [200],
+    })
+  }
+
+  async createSeason(input: CreateSeasonInput): Promise<Season> {
+    return this.request<CreateSeasonInput, Season, ErrorResponse>({
+      path: "/seasons",
+      method: "POST",
+      body: input,
+      expectedStatus: [201],
     })
   }
 

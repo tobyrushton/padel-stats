@@ -1,14 +1,22 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   ApiError,
   createApiClient,
   type CreateGameInput,
   type ErrorResponse,
   type Game,
+  type Season,
   type SearchPlayer,
 } from "@/lib/api-client"
 import PlayerSelector from "@/components/games/PlayerSelector"
@@ -23,26 +31,17 @@ type CreateGameFormState = {
   playedAt: string
 }
 
+type SeasonOption = {
+  id: number
+  name: string
+}
+
 function getTodayDateInputValue(): string {
   const now = new Date()
   const year = now.getFullYear()
   const month = String(now.getMonth() + 1).padStart(2, "0")
   const day = String(now.getDate()).padStart(2, "0")
   return `${year}-${month}-${day}`
-}
-
-function inferSeasonIDFromPlayedAt(playedAt: string): number | undefined {
-  const matchedYear = playedAt.match(/^(\d{4})-\d{2}-\d{2}$/)
-  if (!matchedYear) {
-    return undefined
-  }
-
-  const seasonID = Number(matchedYear[1])
-  if (!Number.isInteger(seasonID) || seasonID <= 0) {
-    return undefined
-  }
-
-  return seasonID
 }
 
 const INITIAL_STATE: CreateGameFormState = {
@@ -93,10 +92,10 @@ function parseNonNegativeInteger(value: string): number | undefined {
   return parsed
 }
 
-function validateGameInput(form: CreateGameFormState): string | null {
-  const seasonID = inferSeasonIDFromPlayedAt(form.playedAt)
+function validateGameInput(form: CreateGameFormState, selectedSeasonID: string): string | null {
+  const seasonID = parsePositiveInteger(selectedSeasonID)
   if (!seasonID) {
-    return "Played date must be valid."
+    return "Season is required."
   }
 
   const playerIDs = [
@@ -133,11 +132,23 @@ function validateGameInput(form: CreateGameFormState): string | null {
   return null
 }
 
-function toCreateGameInput(form: CreateGameFormState): CreateGameInput {
-  const seasonID = inferSeasonIDFromPlayedAt(form.playedAt)
+function toSeasonOptions(seasons: Season[]): SeasonOption[] {
+  return seasons
+    .filter((season): season is Season & { id: number; name: string } => (
+      typeof season.id === "number" &&
+      season.id > 0 &&
+      typeof season.name === "string" &&
+      season.name.trim().length > 0
+    ))
+    .map((season) => ({ id: season.id, name: season.name.trim() }))
+    .sort((a, b) => b.id - a.id)
+}
+
+function toCreateGameInput(form: CreateGameFormState, selectedSeasonID: string): CreateGameInput {
+  const seasonID = parsePositiveInteger(selectedSeasonID)
 
   if (!seasonID) {
-    throw new Error("Unable to infer season ID from played date")
+    throw new Error("Season is required")
   }
 
   return {
@@ -155,9 +166,53 @@ function toCreateGameInput(form: CreateGameFormState): CreateGameInput {
 export default function CreateGameForm({ apiBaseUrl, onCreated, focusSignal, onCancel }: CreateGameFormProps) {
   const apiClient = useMemo(() => createApiClient(apiBaseUrl), [apiBaseUrl])
   const [form, setForm] = useState<CreateGameFormState>(INITIAL_STATE)
+  const [seasons, setSeasons] = useState<SeasonOption[]>([])
+  const [selectedSeasonID, setSelectedSeasonID] = useState("")
+  const [isLoadingSeasons, setIsLoadingSeasons] = useState(true)
+  const [seasonsErrorMessage, setSeasonsErrorMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadSeasons = async () => {
+      try {
+        setIsLoadingSeasons(true)
+        setSeasonsErrorMessage(null)
+
+        const response = await apiClient.listSeasons()
+        if (!isMounted) {
+          return
+        }
+
+        const seasonOptions = toSeasonOptions(response)
+        setSeasons(seasonOptions)
+        setSelectedSeasonID((current) => current || String(seasonOptions[0]?.id ?? ""))
+
+        if (seasonOptions.length === 0) {
+          setSeasonsErrorMessage("No seasons are available yet. Create a season before adding games.")
+        }
+      } catch {
+        if (isMounted) {
+          setSeasons([])
+          setSelectedSeasonID("")
+          setSeasonsErrorMessage("Could not load seasons right now.")
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingSeasons(false)
+        }
+      }
+    }
+
+    void loadSeasons()
+
+    return () => {
+      isMounted = false
+    }
+  }, [apiClient])
 
   const selectedPlayerIDs = [
     parsePositiveInteger(form.team1Player1Id),
@@ -188,7 +243,7 @@ export default function CreateGameForm({ apiBaseUrl, onCreated, focusSignal, onC
     setErrorMessage(null)
     setSuccessMessage(null)
 
-    const validationError = validateGameInput(form)
+    const validationError = validateGameInput(form, selectedSeasonID)
     if (validationError) {
       setErrorMessage(validationError)
       return
@@ -196,7 +251,7 @@ export default function CreateGameForm({ apiBaseUrl, onCreated, focusSignal, onC
 
     try {
       setIsSubmitting(true)
-      const game = await apiClient.createGame(toCreateGameInput(form))
+      const game = await apiClient.createGame(toCreateGameInput(form, selectedSeasonID))
       setForm(() => ({
         ...INITIAL_STATE,
       }))
@@ -214,6 +269,26 @@ export default function CreateGameForm({ apiBaseUrl, onCreated, focusSignal, onC
       <div className="space-y-1">
         <h2 className="text-xl font-semibold">Add game</h2>
         <p className="text-sm text-muted-foreground">Enter players, score, and match date to record a game.</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="game-season">Season</Label>
+        <Select
+          value={selectedSeasonID}
+          onValueChange={setSelectedSeasonID}
+          disabled={isSubmitting || isLoadingSeasons || seasons.length === 0}
+        >
+          <SelectTrigger id="game-season" className="w-full">
+            <SelectValue placeholder={isLoadingSeasons ? "Loading seasons..." : "Select a season"} />
+          </SelectTrigger>
+          <SelectContent>
+            {seasons.map((season) => (
+              <SelectItem key={season.id} value={String(season.id)}>
+                {season.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -305,6 +380,12 @@ export default function CreateGameForm({ apiBaseUrl, onCreated, focusSignal, onC
         </p>
       ) : null}
 
+      {seasonsErrorMessage ? (
+        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {seasonsErrorMessage}
+        </p>
+      ) : null}
+
       {successMessage ? (
         <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary">
           {successMessage}
@@ -312,7 +393,11 @@ export default function CreateGameForm({ apiBaseUrl, onCreated, focusSignal, onC
       ) : null}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+        <Button
+          type="submit"
+          disabled={isSubmitting || isLoadingSeasons || seasons.length === 0 || !selectedSeasonID}
+          className="w-full sm:w-auto"
+        >
           {isSubmitting ? "Adding game..." : "Add game"}
         </Button>
         {onCancel ? (

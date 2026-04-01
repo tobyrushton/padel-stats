@@ -38,7 +38,6 @@ type Season struct {
 
 	ID        int64     `bun:"id,pk,autoincrement"`
 	Name      string    `bun:"name,notnull"`
-	Year      int       `bun:"year,notnull"`
 	StartDate time.Time `bun:"start_date,notnull"`
 	EndDate   time.Time `bun:"end_date,notnull"`
 	CreatedAt time.Time `bun:"created_at,notnull,default:current_timestamp"`

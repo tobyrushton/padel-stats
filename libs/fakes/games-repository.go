@@ -8,7 +8,7 @@ import (
 	"github.com/tobyrushton/padel-stats/libs/games"
 )
 
-type FakeRepository struct {
+type FakeGamesRepository struct {
 	CreateGameStub        func(context.Context, *games.GameRecord) error
 	createGameMutex       sync.RWMutex
 	createGameArgsForCall []struct {
@@ -65,7 +65,7 @@ type FakeRepository struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeRepository) CreateGame(arg1 context.Context, arg2 *games.GameRecord) error {
+func (fake *FakeGamesRepository) CreateGame(arg1 context.Context, arg2 *games.GameRecord) error {
 	fake.createGameMutex.Lock()
 	ret, specificReturn := fake.createGameReturnsOnCall[len(fake.createGameArgsForCall)]
 	fake.createGameArgsForCall = append(fake.createGameArgsForCall, struct {
@@ -85,26 +85,26 @@ func (fake *FakeRepository) CreateGame(arg1 context.Context, arg2 *games.GameRec
 	return fakeReturns.result1
 }
 
-func (fake *FakeRepository) CreateGameCallCount() int {
+func (fake *FakeGamesRepository) CreateGameCallCount() int {
 	fake.createGameMutex.RLock()
 	defer fake.createGameMutex.RUnlock()
 	return len(fake.createGameArgsForCall)
 }
 
-func (fake *FakeRepository) CreateGameCalls(stub func(context.Context, *games.GameRecord) error) {
+func (fake *FakeGamesRepository) CreateGameCalls(stub func(context.Context, *games.GameRecord) error) {
 	fake.createGameMutex.Lock()
 	defer fake.createGameMutex.Unlock()
 	fake.CreateGameStub = stub
 }
 
-func (fake *FakeRepository) CreateGameArgsForCall(i int) (context.Context, *games.GameRecord) {
+func (fake *FakeGamesRepository) CreateGameArgsForCall(i int) (context.Context, *games.GameRecord) {
 	fake.createGameMutex.RLock()
 	defer fake.createGameMutex.RUnlock()
 	argsForCall := fake.createGameArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeRepository) CreateGameReturns(result1 error) {
+func (fake *FakeGamesRepository) CreateGameReturns(result1 error) {
 	fake.createGameMutex.Lock()
 	defer fake.createGameMutex.Unlock()
 	fake.CreateGameStub = nil
@@ -113,7 +113,7 @@ func (fake *FakeRepository) CreateGameReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeRepository) CreateGameReturnsOnCall(i int, result1 error) {
+func (fake *FakeGamesRepository) CreateGameReturnsOnCall(i int, result1 error) {
 	fake.createGameMutex.Lock()
 	defer fake.createGameMutex.Unlock()
 	fake.CreateGameStub = nil
@@ -127,7 +127,7 @@ func (fake *FakeRepository) CreateGameReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeRepository) DeleteGameByID(arg1 context.Context, arg2 int64) error {
+func (fake *FakeGamesRepository) DeleteGameByID(arg1 context.Context, arg2 int64) error {
 	fake.deleteGameByIDMutex.Lock()
 	ret, specificReturn := fake.deleteGameByIDReturnsOnCall[len(fake.deleteGameByIDArgsForCall)]
 	fake.deleteGameByIDArgsForCall = append(fake.deleteGameByIDArgsForCall, struct {
@@ -147,26 +147,26 @@ func (fake *FakeRepository) DeleteGameByID(arg1 context.Context, arg2 int64) err
 	return fakeReturns.result1
 }
 
-func (fake *FakeRepository) DeleteGameByIDCallCount() int {
+func (fake *FakeGamesRepository) DeleteGameByIDCallCount() int {
 	fake.deleteGameByIDMutex.RLock()
 	defer fake.deleteGameByIDMutex.RUnlock()
 	return len(fake.deleteGameByIDArgsForCall)
 }
 
-func (fake *FakeRepository) DeleteGameByIDCalls(stub func(context.Context, int64) error) {
+func (fake *FakeGamesRepository) DeleteGameByIDCalls(stub func(context.Context, int64) error) {
 	fake.deleteGameByIDMutex.Lock()
 	defer fake.deleteGameByIDMutex.Unlock()
 	fake.DeleteGameByIDStub = stub
 }
 
-func (fake *FakeRepository) DeleteGameByIDArgsForCall(i int) (context.Context, int64) {
+func (fake *FakeGamesRepository) DeleteGameByIDArgsForCall(i int) (context.Context, int64) {
 	fake.deleteGameByIDMutex.RLock()
 	defer fake.deleteGameByIDMutex.RUnlock()
 	argsForCall := fake.deleteGameByIDArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeRepository) DeleteGameByIDReturns(result1 error) {
+func (fake *FakeGamesRepository) DeleteGameByIDReturns(result1 error) {
 	fake.deleteGameByIDMutex.Lock()
 	defer fake.deleteGameByIDMutex.Unlock()
 	fake.DeleteGameByIDStub = nil
@@ -175,7 +175,7 @@ func (fake *FakeRepository) DeleteGameByIDReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeRepository) DeleteGameByIDReturnsOnCall(i int, result1 error) {
+func (fake *FakeGamesRepository) DeleteGameByIDReturnsOnCall(i int, result1 error) {
 	fake.deleteGameByIDMutex.Lock()
 	defer fake.deleteGameByIDMutex.Unlock()
 	fake.DeleteGameByIDStub = nil
@@ -189,7 +189,7 @@ func (fake *FakeRepository) DeleteGameByIDReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeRepository) FindGameByID(arg1 context.Context, arg2 int64) (*games.GameRecord, error) {
+func (fake *FakeGamesRepository) FindGameByID(arg1 context.Context, arg2 int64) (*games.GameRecord, error) {
 	fake.findGameByIDMutex.Lock()
 	ret, specificReturn := fake.findGameByIDReturnsOnCall[len(fake.findGameByIDArgsForCall)]
 	fake.findGameByIDArgsForCall = append(fake.findGameByIDArgsForCall, struct {
@@ -209,26 +209,26 @@ func (fake *FakeRepository) FindGameByID(arg1 context.Context, arg2 int64) (*gam
 	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeRepository) FindGameByIDCallCount() int {
+func (fake *FakeGamesRepository) FindGameByIDCallCount() int {
 	fake.findGameByIDMutex.RLock()
 	defer fake.findGameByIDMutex.RUnlock()
 	return len(fake.findGameByIDArgsForCall)
 }
 
-func (fake *FakeRepository) FindGameByIDCalls(stub func(context.Context, int64) (*games.GameRecord, error)) {
+func (fake *FakeGamesRepository) FindGameByIDCalls(stub func(context.Context, int64) (*games.GameRecord, error)) {
 	fake.findGameByIDMutex.Lock()
 	defer fake.findGameByIDMutex.Unlock()
 	fake.FindGameByIDStub = stub
 }
 
-func (fake *FakeRepository) FindGameByIDArgsForCall(i int) (context.Context, int64) {
+func (fake *FakeGamesRepository) FindGameByIDArgsForCall(i int) (context.Context, int64) {
 	fake.findGameByIDMutex.RLock()
 	defer fake.findGameByIDMutex.RUnlock()
 	argsForCall := fake.findGameByIDArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeRepository) FindGameByIDReturns(result1 *games.GameRecord, result2 error) {
+func (fake *FakeGamesRepository) FindGameByIDReturns(result1 *games.GameRecord, result2 error) {
 	fake.findGameByIDMutex.Lock()
 	defer fake.findGameByIDMutex.Unlock()
 	fake.FindGameByIDStub = nil
@@ -238,7 +238,7 @@ func (fake *FakeRepository) FindGameByIDReturns(result1 *games.GameRecord, resul
 	}{result1, result2}
 }
 
-func (fake *FakeRepository) FindGameByIDReturnsOnCall(i int, result1 *games.GameRecord, result2 error) {
+func (fake *FakeGamesRepository) FindGameByIDReturnsOnCall(i int, result1 *games.GameRecord, result2 error) {
 	fake.findGameByIDMutex.Lock()
 	defer fake.findGameByIDMutex.Unlock()
 	fake.FindGameByIDStub = nil
@@ -254,7 +254,7 @@ func (fake *FakeRepository) FindGameByIDReturnsOnCall(i int, result1 *games.Game
 	}{result1, result2}
 }
 
-func (fake *FakeRepository) FindGamesByPlayerID(arg1 context.Context, arg2 int64) ([]*games.GameRecord, error) {
+func (fake *FakeGamesRepository) FindGamesByPlayerID(arg1 context.Context, arg2 int64) ([]*games.GameRecord, error) {
 	fake.findGamesByPlayerIDMutex.Lock()
 	ret, specificReturn := fake.findGamesByPlayerIDReturnsOnCall[len(fake.findGamesByPlayerIDArgsForCall)]
 	fake.findGamesByPlayerIDArgsForCall = append(fake.findGamesByPlayerIDArgsForCall, struct {
@@ -274,26 +274,26 @@ func (fake *FakeRepository) FindGamesByPlayerID(arg1 context.Context, arg2 int64
 	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeRepository) FindGamesByPlayerIDCallCount() int {
+func (fake *FakeGamesRepository) FindGamesByPlayerIDCallCount() int {
 	fake.findGamesByPlayerIDMutex.RLock()
 	defer fake.findGamesByPlayerIDMutex.RUnlock()
 	return len(fake.findGamesByPlayerIDArgsForCall)
 }
 
-func (fake *FakeRepository) FindGamesByPlayerIDCalls(stub func(context.Context, int64) ([]*games.GameRecord, error)) {
+func (fake *FakeGamesRepository) FindGamesByPlayerIDCalls(stub func(context.Context, int64) ([]*games.GameRecord, error)) {
 	fake.findGamesByPlayerIDMutex.Lock()
 	defer fake.findGamesByPlayerIDMutex.Unlock()
 	fake.FindGamesByPlayerIDStub = stub
 }
 
-func (fake *FakeRepository) FindGamesByPlayerIDArgsForCall(i int) (context.Context, int64) {
+func (fake *FakeGamesRepository) FindGamesByPlayerIDArgsForCall(i int) (context.Context, int64) {
 	fake.findGamesByPlayerIDMutex.RLock()
 	defer fake.findGamesByPlayerIDMutex.RUnlock()
 	argsForCall := fake.findGamesByPlayerIDArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeRepository) FindGamesByPlayerIDReturns(result1 []*games.GameRecord, result2 error) {
+func (fake *FakeGamesRepository) FindGamesByPlayerIDReturns(result1 []*games.GameRecord, result2 error) {
 	fake.findGamesByPlayerIDMutex.Lock()
 	defer fake.findGamesByPlayerIDMutex.Unlock()
 	fake.FindGamesByPlayerIDStub = nil
@@ -303,7 +303,7 @@ func (fake *FakeRepository) FindGamesByPlayerIDReturns(result1 []*games.GameReco
 	}{result1, result2}
 }
 
-func (fake *FakeRepository) FindGamesByPlayerIDReturnsOnCall(i int, result1 []*games.GameRecord, result2 error) {
+func (fake *FakeGamesRepository) FindGamesByPlayerIDReturnsOnCall(i int, result1 []*games.GameRecord, result2 error) {
 	fake.findGamesByPlayerIDMutex.Lock()
 	defer fake.findGamesByPlayerIDMutex.Unlock()
 	fake.FindGamesByPlayerIDStub = nil
@@ -319,7 +319,7 @@ func (fake *FakeRepository) FindGamesByPlayerIDReturnsOnCall(i int, result1 []*g
 	}{result1, result2}
 }
 
-func (fake *FakeRepository) Invocations() map[string][][]interface{} {
+func (fake *FakeGamesRepository) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
@@ -329,7 +329,7 @@ func (fake *FakeRepository) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeRepository) recordInvocation(key string, args []interface{}) {
+func (fake *FakeGamesRepository) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -341,4 +341,4 @@ func (fake *FakeRepository) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ games.Repository = new(FakeRepository)
+var _ games.GamesRepository = new(FakeGamesRepository)

@@ -7,17 +7,17 @@ import (
 
 //go:generate go tool counterfeiter -generate
 
-//counterfeiter:generate -o ../fakes/leaderboard-repository.go . Repository
-type Repository interface {
+//counterfeiter:generate -o ../fakes/leaderboard-repository.go . LeaderboardRepository
+type LeaderboardRepository interface {
 	FindSeasonLeaderboard(ctx context.Context, seasonID int64) ([]*EntryRecord, error)
 	FindAllTimeLeaderboard(ctx context.Context) ([]*EntryRecord, error)
 }
 
 type Service struct {
-	repo Repository
+	repo LeaderboardRepository
 }
 
-func NewService(repo Repository) (*Service, error) {
+func NewService(repo LeaderboardRepository) (*Service, error) {
 	if repo == nil {
 		return nil, errors.New("leaderboard repository is required")
 	}
