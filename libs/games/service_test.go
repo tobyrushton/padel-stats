@@ -12,36 +12,65 @@ import (
 
 	"github.com/tobyrushton/padel-stats/libs/fakes"
 	"github.com/tobyrushton/padel-stats/libs/games"
+	seasonsdomain "github.com/tobyrushton/padel-stats/libs/seasons"
 )
+
+type fakeSeasonResolver struct {
+	getSeasonByDateFn func(context.Context, time.Time) (*seasonsdomain.Season, error)
+	callCount         int
+}
+
+func (f *fakeSeasonResolver) GetSeasonByDate(ctx context.Context, playedAt time.Time) (*seasonsdomain.Season, error) {
+	f.callCount++
+	if f.getSeasonByDateFn == nil {
+		return nil, errors.New("get season by date function not configured")
+	}
+
+	return f.getSeasonByDateFn(ctx, playedAt)
+}
 
 type ServiceTestSuite struct {
 	suite.Suite
-	repo    *fakes.FakeGamesRepository
-	service *games.Service
-	ctx     context.Context
+	repo           *fakes.FakeGamesRepository
+	seasonResolver *fakeSeasonResolver
+	service        *games.Service
+	ctx            context.Context
 }
 
 func (suite *ServiceTestSuite) SetupTest() {
 	suite.repo = new(fakes.FakeGamesRepository)
+	suite.seasonResolver = &fakeSeasonResolver{
+		getSeasonByDateFn: func(ctx context.Context, playedAt time.Time) (*seasonsdomain.Season, error) {
+			return &seasonsdomain.Season{ID: 1, Name: "Season 1"}, nil
+		},
+	}
 	suite.ctx = context.Background()
 
 	var err error
-	suite.service, err = games.NewService(suite.repo)
+	suite.service, err = games.NewService(suite.repo, suite.seasonResolver)
 	require.NoError(suite.T(), err)
 }
 
 func (suite *ServiceTestSuite) TestNewService_NilRepository() {
-	service, err := games.NewService(nil)
+	service, err := games.NewService(nil, suite.seasonResolver)
 
 	assert.Error(suite.T(), err)
 	assert.Nil(suite.T(), service)
 	assert.Equal(suite.T(), "games repository is required", err.Error())
 }
 
+func (suite *ServiceTestSuite) TestNewService_NilSeasonResolver() {
+	service, err := games.NewService(suite.repo, nil)
+
+	assert.Error(suite.T(), err)
+	assert.Nil(suite.T(), service)
+	assert.Equal(suite.T(), "season resolver is required", err.Error())
+}
+
 func (suite *ServiceTestSuite) TestCreateGame_Success() {
 	playedAt := time.Now().UTC()
 	input := &games.CreateGameInput{
-		SeasonID:       1,
+		SeasonID:       999,
 		Team1Player1ID: 10,
 		Team1Player2ID: 11,
 		Team2Player1ID: 12,
@@ -68,11 +97,12 @@ func (suite *ServiceTestSuite) TestCreateGame_Success() {
 	assert.Equal(suite.T(), 1, suite.repo.CreateGameCallCount())
 	_, createdRecord := suite.repo.CreateGameArgsForCall(0)
 	assert.Equal(suite.T(), int64(77), createdRecord.CreatorID)
+	assert.Equal(suite.T(), int64(1), createdRecord.SeasonID)
+	assert.Equal(suite.T(), 1, suite.seasonResolver.callCount)
 }
 
 func (suite *ServiceTestSuite) TestCreateGame_DuplicatePlayers() {
 	input := &games.CreateGameInput{
-		SeasonID:       1,
 		Team1Player1ID: 10,
 		Team1Player2ID: 10,
 		Team2Player1ID: 12,
@@ -87,11 +117,11 @@ func (suite *ServiceTestSuite) TestCreateGame_DuplicatePlayers() {
 	assert.ErrorIs(suite.T(), err, games.ErrDuplicatePlayers)
 	assert.Nil(suite.T(), result)
 	assert.Equal(suite.T(), 0, suite.repo.CreateGameCallCount())
+	assert.Equal(suite.T(), 0, suite.seasonResolver.callCount)
 }
 
 func (suite *ServiceTestSuite) TestCreateGame_RepoError() {
 	input := &games.CreateGameInput{
-		SeasonID:       1,
 		Team1Player1ID: 10,
 		Team1Player2ID: 11,
 		Team2Player1ID: 12,
@@ -108,11 +138,11 @@ func (suite *ServiceTestSuite) TestCreateGame_RepoError() {
 	assert.EqualError(suite.T(), err, "insert failed")
 	assert.Nil(suite.T(), result)
 	assert.Equal(suite.T(), 1, suite.repo.CreateGameCallCount())
+	assert.Equal(suite.T(), 1, suite.seasonResolver.callCount)
 }
 
 func (suite *ServiceTestSuite) TestCreateGame_InvalidCreatorID() {
 	input := &games.CreateGameInput{
-		SeasonID:       1,
 		Team1Player1ID: 10,
 		Team1Player2ID: 11,
 		Team2Player1ID: 12,
@@ -127,6 +157,53 @@ func (suite *ServiceTestSuite) TestCreateGame_InvalidCreatorID() {
 	assert.ErrorIs(suite.T(), err, games.ErrInvalidCreatorID)
 	assert.Nil(suite.T(), result)
 	assert.Equal(suite.T(), 0, suite.repo.CreateGameCallCount())
+	assert.Equal(suite.T(), 0, suite.seasonResolver.callCount)
+}
+
+func (suite *ServiceTestSuite) TestCreateGame_NoSeasonForDate() {
+	suite.seasonResolver.getSeasonByDateFn = func(ctx context.Context, playedAt time.Time) (*seasonsdomain.Season, error) {
+		return nil, seasonsdomain.ErrSeasonNotFoundForDate
+	}
+
+	input := &games.CreateGameInput{
+		Team1Player1ID: 10,
+		Team1Player2ID: 11,
+		Team2Player1ID: 12,
+		Team2Player2ID: 13,
+		Team1Score:     6,
+		Team2Score:     4,
+		PlayedAt:       time.Now().UTC(),
+	}
+
+	result, err := suite.service.CreateGame(suite.ctx, 77, input)
+
+	assert.ErrorIs(suite.T(), err, games.ErrNoSeasonForPlayedAt)
+	assert.Nil(suite.T(), result)
+	assert.Equal(suite.T(), 0, suite.repo.CreateGameCallCount())
+	assert.Equal(suite.T(), 1, suite.seasonResolver.callCount)
+}
+
+func (suite *ServiceTestSuite) TestCreateGame_OverlappingSeasons() {
+	suite.seasonResolver.getSeasonByDateFn = func(ctx context.Context, playedAt time.Time) (*seasonsdomain.Season, error) {
+		return nil, seasonsdomain.ErrMultipleSeasonsForDate
+	}
+
+	input := &games.CreateGameInput{
+		Team1Player1ID: 10,
+		Team1Player2ID: 11,
+		Team2Player1ID: 12,
+		Team2Player2ID: 13,
+		Team1Score:     6,
+		Team2Score:     4,
+		PlayedAt:       time.Now().UTC(),
+	}
+
+	result, err := suite.service.CreateGame(suite.ctx, 77, input)
+
+	assert.ErrorIs(suite.T(), err, games.ErrSeasonOverlap)
+	assert.Nil(suite.T(), result)
+	assert.Equal(suite.T(), 0, suite.repo.CreateGameCallCount())
+	assert.Equal(suite.T(), 1, suite.seasonResolver.callCount)
 }
 
 func (suite *ServiceTestSuite) TestListGamesForPlayer_Success() {

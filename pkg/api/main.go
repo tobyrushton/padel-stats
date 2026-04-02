@@ -71,7 +71,12 @@ func main() {
 		panic(err)
 	}
 
-	gs, err := gamelib.NewService(gr)
+	seasonsRepo, err := dbseasons.NewRepository(db)
+	if err != nil {
+		panic(err)
+	}
+
+	gs, err := gamelib.NewService(gr, seasonsRepo)
 	if err != nil {
 		panic(err)
 	}
@@ -91,11 +96,6 @@ func main() {
 
 	lh := handlers.NewLeaderboardHandler(ls)
 	lh.RegisterRoutes(r)
-
-	seasonsRepo, err := dbseasons.NewRepository(db)
-	if err != nil {
-		panic(err)
-	}
 
 	seasonsService, err := seasonsdomain.NewService(seasonsRepo)
 	if err != nil {

@@ -167,7 +167,7 @@ func handleGameError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, gamedomain.ErrGameNotFound):
 		writeError(w, http.StatusNotFound, "game not found")
-	case errors.Is(err, gamedomain.ErrInvalidSeasonID),
+	case errors.Is(err, gamedomain.ErrNoSeasonForPlayedAt),
 		errors.Is(err, gamedomain.ErrInvalidPlayerID),
 		errors.Is(err, gamedomain.ErrDuplicatePlayers),
 		errors.Is(err, gamedomain.ErrInvalidScore),
@@ -177,6 +177,8 @@ func handleGameError(w http.ResponseWriter, err error) {
 		errors.Is(err, gamedomain.ErrInvalidDeleteGame),
 		errors.Is(err, gamedomain.ErrInvalidPlayerQuery):
 		writeError(w, http.StatusBadRequest, err.Error())
+	case errors.Is(err, gamedomain.ErrSeasonOverlap):
+		writeError(w, http.StatusInternalServerError, "internal server error")
 	default:
 		writeError(w, http.StatusInternalServerError, "internal server error")
 	}

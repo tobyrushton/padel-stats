@@ -103,7 +103,6 @@ func TestCreateGameSuccess(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, int64(10), got.ID)
 	assert.Equal(t, int64(42), got.CreatorID)
-	assert.Equal(t, int64(1), got.SeasonID)
 }
 
 func TestCreateGameBadBody(t *testing.T) {
@@ -124,7 +123,7 @@ func TestCreateGameBadBody(t *testing.T) {
 func TestCreateGameValidationError(t *testing.T) {
 	h := NewGamesHandler(&fakeGamesService{
 		createGameFn: func(ctx context.Context, creatorID int64, input *gamedomain.CreateGameInput) (*gamedomain.Game, error) {
-			return nil, gamedomain.ErrInvalidSeasonID
+			return nil, gamedomain.ErrNoSeasonForPlayedAt
 		},
 	}, &fakeSessionValidator{
 		validateFn: func(ctx context.Context, tokenString string) (*models.Session, error) {
@@ -132,7 +131,7 @@ func TestCreateGameValidationError(t *testing.T) {
 		},
 	})
 
-	body := `{"seasonId":0,"team1Player1Id":1,"team1Player2Id":2,"team2Player1Id":3,"team2Player2Id":4,"team1Score":6,"team2Score":4,"playedAt":"2026-03-30T12:00:00Z"}`
+	body := `{"team1Player1Id":1,"team1Player2Id":2,"team2Player1Id":3,"team2Player2Id":4,"team1Score":6,"team2Score":4,"playedAt":"2026-03-30T12:00:00Z"}`
 	r := httptest.NewRequest(http.MethodPost, "/games", bytes.NewBufferString(body))
 	r.Header.Set("Authorization", "Bearer token-value")
 	w := httptest.NewRecorder()
@@ -149,13 +148,35 @@ func TestCreateGameUnauthorizedWithoutToken(t *testing.T) {
 		},
 	})
 
-	body := `{"seasonId":1,"team1Player1Id":1,"team1Player2Id":2,"team2Player1Id":3,"team2Player2Id":4,"team1Score":6,"team2Score":4,"playedAt":"2026-03-30T12:00:00Z"}`
+	body := `{"team1Player1Id":1,"team1Player2Id":2,"team2Player1Id":3,"team2Player2Id":4,"team1Score":6,"team2Score":4,"playedAt":"2026-03-30T12:00:00Z"}`
 	r := httptest.NewRequest(http.MethodPost, "/games", bytes.NewBufferString(body))
 	w := httptest.NewRecorder()
 
 	h.CreateGame(w, r)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestCreateGameLegacySeasonIDStillAccepted(t *testing.T) {
+	h := NewGamesHandler(&fakeGamesService{
+		createGameFn: func(ctx context.Context, creatorID int64, input *gamedomain.CreateGameInput) (*gamedomain.Game, error) {
+			assert.Equal(t, int64(999), input.SeasonID)
+			return &gamedomain.Game{ID: 33, CreatorID: creatorID, SeasonID: 12}, nil
+		},
+	}, &fakeSessionValidator{
+		validateFn: func(ctx context.Context, tokenString string) (*models.Session, error) {
+			return &models.Session{UserID: 42}, nil
+		},
+	})
+
+	body := `{"seasonId":999,"team1Player1Id":1,"team1Player2Id":2,"team2Player1Id":3,"team2Player2Id":4,"team1Score":6,"team2Score":4,"playedAt":"2026-03-30T12:00:00Z"}`
+	r := httptest.NewRequest(http.MethodPost, "/games", bytes.NewBufferString(body))
+	r.Header.Set("Authorization", "Bearer token-value")
+	w := httptest.NewRecorder()
+
+	h.CreateGame(w, r)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
 func TestGetGameByIDSuccess(t *testing.T) {
@@ -268,7 +289,8 @@ func TestHandleGameErrorMappings(t *testing.T) {
 		expected int
 	}{
 		{err: gamedomain.ErrGameNotFound, expected: http.StatusNotFound},
-		{err: gamedomain.ErrInvalidSeasonID, expected: http.StatusBadRequest},
+		{err: gamedomain.ErrNoSeasonForPlayedAt, expected: http.StatusBadRequest},
+		{err: gamedomain.ErrSeasonOverlap, expected: http.StatusInternalServerError},
 		{err: gamedomain.ErrInvalidPlayerID, expected: http.StatusBadRequest},
 		{err: gamedomain.ErrDuplicatePlayers, expected: http.StatusBadRequest},
 		{err: gamedomain.ErrInvalidScore, expected: http.StatusBadRequest},
