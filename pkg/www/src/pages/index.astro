@@ -1,6 +1,8 @@
 ---
+import { Resource } from "sst"
 import "@/styles/global.css"
 import Header from "@/components/site/Header"
+import CurrentSeasonLeaderboard from "@/components/site/CurrentSeasonLeaderboard"
 
 ---
 
@@ -11,12 +13,45 @@ import Header from "@/components/site/Header"
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Padel Stats</title>
+		<title>Bexbox Premier Padel</title>
 	</head>
 	<body class="min-h-screen bg-background text-foreground">
 		<Header client:load />
-		<main class="mx-auto flex w-full max-w-6xl px-4 py-10">
-			<h1 class="text-2xl font-semibold">Welcome to Padel Stats</h1>
+		<main class="relative isolate overflow-hidden">
+			<div class="pointer-events-none absolute inset-x-0 -top-24 -z-10 mx-auto h-96 w-[72rem] rounded-full bg-gradient-to-r from-emerald-200/50 via-sky-200/45 to-amber-100/40 blur-3xl"></div>
+
+			<section class="mx-auto w-full max-w-6xl px-4 pb-8 pt-12 md:pb-12 md:pt-16">
+				<div class="space-y-6">
+						<div class="space-y-4">
+							<h1 class="text-balance text-4xl font-semibold tracking-tight md:text-6xl">
+								Bexbox Premier Padel
+							</h1>
+							<p class="max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+								Track every game, compare teammates, and follow the latest season table in one place.
+							</p>
+						</div>
+						<div class="flex flex-wrap gap-3">
+							<a
+								href="/games"
+								class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
+							>
+								Record a game
+							</a>
+							<a
+								href="/leaderboard"
+								class="inline-flex items-center justify-center rounded-md border border-border bg-card px-4 py-2 text-sm font-medium transition hover:bg-muted"
+							>
+								See full standings
+							</a>
+						</div>
+				</div>
+			</section>
+
+			<section class="mx-auto w-full max-w-6xl px-4 pb-14 md:pb-20">
+				<div class="rounded-2xl border border-border/70 bg-card/60 p-4 shadow-sm backdrop-blur md:p-6">
+					<CurrentSeasonLeaderboard client:load apiBaseUrl={Resource.API.url} />
+				</div>
+			</section>
 		</main>
 	</body>
 </html>
