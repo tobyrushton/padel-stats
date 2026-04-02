@@ -51,6 +51,10 @@ func (r *Repository) FindGamesByPlayerID(ctx context.Context, playerID int64) ([
 	err := r.db.NewSelect().
 		Model(&gameModels).
 		Where("team1_player1_id = ? OR team1_player2_id = ? OR team2_player1_id = ? OR team2_player2_id = ?", playerID, playerID, playerID, playerID).
+		Relation("Team1Player1").
+		Relation("Team1Player2").
+		Relation("Team2Player1").
+		Relation("Team2Player2").
 		OrderExpr("played_at DESC").
 		Scan(ctx)
 	if err != nil {
