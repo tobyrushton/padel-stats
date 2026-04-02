@@ -59,9 +59,6 @@ definitions:
       playedAt:
         format: date-time
         type: string
-      seasonId:
-        format: int64
-        type: integer
       team1Player1Id:
         format: int64
         type: integer

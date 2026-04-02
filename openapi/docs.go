@@ -713,10 +713,6 @@ const docTemplate = `{
                     "type": "string",
                     "format": "date-time"
                 },
-                "seasonId": {
-                    "type": "integer",
-                    "format": "int64"
-                },
                 "team1Player1Id": {
                     "type": "integer",
                     "format": "int64"

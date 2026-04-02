@@ -70,7 +70,6 @@ func (suite *ServiceTestSuite) TestNewService_NilSeasonResolver() {
 func (suite *ServiceTestSuite) TestCreateGame_Success() {
 	playedAt := time.Now().UTC()
 	input := &games.CreateGameInput{
-		SeasonID:       999,
 		Team1Player1ID: 10,
 		Team1Player2ID: 11,
 		Team2Player1ID: 12,

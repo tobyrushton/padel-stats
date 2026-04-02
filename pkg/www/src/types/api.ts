@@ -916,8 +916,6 @@ export interface components {
             /** Format: date-time */
             playedAt?: string;
             /** Format: int64 */
-            seasonId?: number;
-            /** Format: int64 */
             team1Player1Id?: number;
             /** Format: int64 */
             team1Player2Id?: number;

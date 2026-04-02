@@ -4,7 +4,6 @@ import "time"
 
 // CreateGameInput is the request payload for creating a game with four players.
 type CreateGameInput struct {
-	SeasonID       int64     `json:"seasonId" format:"int64"`
 	Team1Player1ID int64     `json:"team1Player1Id" format:"int64"`
 	Team1Player2ID int64     `json:"team1Player2Id" format:"int64"`
 	Team2Player1ID int64     `json:"team2Player1Id" format:"int64"`
