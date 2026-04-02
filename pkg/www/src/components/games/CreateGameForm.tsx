@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -39,6 +40,101 @@ const INITIAL_STATE: CreateGameFormState = {
   team1Score: "",
   team2Score: "",
   playedAt: getTodayDateInputValue(),
+}
+
+type PlayerFieldKey = keyof Pick<
+  CreateGameFormState,
+  "team1Player1Id" | "team1Player2Id" | "team2Player1Id" | "team2Player2Id"
+>
+
+interface TeamPlayerGroupProps {
+  apiBaseUrl: string
+  teamName: string
+  firstField: {
+    key: PlayerFieldKey
+    inputId: string
+    label: string
+    value: string
+  }
+  secondField: {
+    key: PlayerFieldKey
+    inputId: string
+    label: string
+    value: string
+  }
+  selectedPlayerIDs: number[]
+  isSubmitting: boolean
+  focusSignal?: number
+  scoreInputId: string
+  scoreLabel: string
+  scoreValue: string
+  onScoreChange: (value: string) => void
+  onPlayerSelect: (field: PlayerFieldKey, player: SearchPlayer | null) => void
+}
+
+function TeamPlayerGroup({
+  apiBaseUrl,
+  teamName,
+  firstField,
+  secondField,
+  selectedPlayerIDs,
+  isSubmitting,
+  focusSignal,
+  scoreInputId,
+  scoreLabel,
+  scoreValue,
+  onScoreChange,
+  onPlayerSelect,
+}: TeamPlayerGroupProps) {
+  const firstSelected = parsePositiveInteger(firstField.value)
+  const secondSelected = parsePositiveInteger(secondField.value)
+
+  return (
+    <Card size="sm" className="overflow-visible border border-border/70 bg-background/40">
+      <CardHeader className="border-b pb-3">
+        <CardTitle className="text-sm tracking-wide uppercase text-muted-foreground">{teamName}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-3">
+        <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-end">
+          <PlayerSelector
+            apiBaseUrl={apiBaseUrl}
+            inputId={firstField.inputId}
+            label={firstField.label}
+            selectedPlayerId={firstField.value}
+            excludedPlayerIDs={selectedPlayerIDs.filter((id) => id !== firstSelected)}
+            onPlayerSelect={(player) => onPlayerSelect(firstField.key, player)}
+            disabled={isSubmitting}
+            focusSignal={focusSignal}
+          />
+
+          <p className="text-center text-sm font-semibold text-muted-foreground sm:pb-2">&amp;</p>
+
+          <PlayerSelector
+            apiBaseUrl={apiBaseUrl}
+            inputId={secondField.inputId}
+            label={secondField.label}
+            selectedPlayerId={secondField.value}
+            excludedPlayerIDs={selectedPlayerIDs.filter((id) => id !== secondSelected)}
+            onPlayerSelect={(player) => onPlayerSelect(secondField.key, player)}
+            disabled={isSubmitting}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={scoreInputId}>{scoreLabel}</Label>
+          <Input
+            id={scoreInputId}
+            type="number"
+            min={0}
+            value={scoreValue}
+            onChange={(event) => onScoreChange(event.currentTarget.value)}
+            disabled={isSubmitting}
+            required
+          />
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
 interface CreateGameFormProps {
@@ -140,7 +236,7 @@ export default function CreateGameForm({ apiBaseUrl, onCreated, focusSignal, onC
     parsePositiveInteger(form.team2Player2Id),
   ].filter((id): id is number => Boolean(id))
 
-  const selectPlayer = (field: keyof Pick<CreateGameFormState, "team1Player1Id" | "team1Player2Id" | "team2Player1Id" | "team2Player2Id">, player: SearchPlayer | null) => {
+  const selectPlayer = (field: PlayerFieldKey, player: SearchPlayer | null) => {
     const playerID = player?.id
     if (!playerID || !Number.isInteger(playerID) || playerID <= 0) {
       handleChange(field, "")
@@ -190,75 +286,61 @@ export default function CreateGameForm({ apiBaseUrl, onCreated, focusSignal, onC
         <p className="text-sm text-muted-foreground">Enter players, score, and match date to record a game.</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <PlayerSelector
+      <div className="grid gap-3 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+        <TeamPlayerGroup
           apiBaseUrl={apiBaseUrl}
-          inputId="game-team1-player1-id"
-          label="Team 1 Player 1"
-          selectedPlayerId={form.team1Player1Id}
-          excludedPlayerIDs={selectedPlayerIDs.filter((id) => id !== parsePositiveInteger(form.team1Player1Id))}
-          onPlayerSelect={(player) => selectPlayer("team1Player1Id", player)}
-          disabled={isSubmitting}
+          teamName="Team A"
+          firstField={{
+            key: "team1Player1Id",
+            inputId: "game-team-a-player-a-id",
+            label: "Player A",
+            value: form.team1Player1Id,
+          }}
+          secondField={{
+            key: "team1Player2Id",
+            inputId: "game-team-a-player-b-id",
+            label: "Player B",
+            value: form.team1Player2Id,
+          }}
+          selectedPlayerIDs={selectedPlayerIDs}
+          onPlayerSelect={selectPlayer}
+          isSubmitting={isSubmitting}
           focusSignal={focusSignal}
+          scoreInputId="game-team1-score"
+          scoreLabel="Team 1 Score"
+          scoreValue={form.team1Score}
+          onScoreChange={(value) => handleChange("team1Score", value)}
         />
 
-        <PlayerSelector
-          apiBaseUrl={apiBaseUrl}
-          inputId="game-team1-player2-id"
-          label="Team 1 Player 2"
-          selectedPlayerId={form.team1Player2Id}
-          excludedPlayerIDs={selectedPlayerIDs.filter((id) => id !== parsePositiveInteger(form.team1Player2Id))}
-          onPlayerSelect={(player) => selectPlayer("team1Player2Id", player)}
-          disabled={isSubmitting}
-        />
-
-        <PlayerSelector
-          apiBaseUrl={apiBaseUrl}
-          inputId="game-team2-player1-id"
-          label="Team 2 Player 1"
-          selectedPlayerId={form.team2Player1Id}
-          excludedPlayerIDs={selectedPlayerIDs.filter((id) => id !== parsePositiveInteger(form.team2Player1Id))}
-          onPlayerSelect={(player) => selectPlayer("team2Player1Id", player)}
-          disabled={isSubmitting}
-        />
-
-        <PlayerSelector
-          apiBaseUrl={apiBaseUrl}
-          inputId="game-team2-player2-id"
-          label="Team 2 Player 2"
-          selectedPlayerId={form.team2Player2Id}
-          excludedPlayerIDs={selectedPlayerIDs.filter((id) => id !== parsePositiveInteger(form.team2Player2Id))}
-          onPlayerSelect={(player) => selectPlayer("team2Player2Id", player)}
-          disabled={isSubmitting}
-        />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="game-team1-score">Team 1 Score</Label>
-          <Input
-            id="game-team1-score"
-            type="number"
-            min={0}
-            value={form.team1Score}
-            onChange={(event) => handleChange("team1Score", event.currentTarget.value)}
-            disabled={isSubmitting}
-            required
-          />
+        <div className="flex items-center justify-center">
+          <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-full border border-border bg-muted px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            vs
+          </span>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="game-team2-score">Team 2 Score</Label>
-          <Input
-            id="game-team2-score"
-            type="number"
-            min={0}
-            value={form.team2Score}
-            onChange={(event) => handleChange("team2Score", event.currentTarget.value)}
-            disabled={isSubmitting}
-            required
-          />
-        </div>
+        <TeamPlayerGroup
+          apiBaseUrl={apiBaseUrl}
+          teamName="Team B"
+          firstField={{
+            key: "team2Player1Id",
+            inputId: "game-team-b-player-c-id",
+            label: "Player C",
+            value: form.team2Player1Id,
+          }}
+          secondField={{
+            key: "team2Player2Id",
+            inputId: "game-team-b-player-d-id",
+            label: "Player D",
+            value: form.team2Player2Id,
+          }}
+          selectedPlayerIDs={selectedPlayerIDs}
+          onPlayerSelect={selectPlayer}
+          isSubmitting={isSubmitting}
+          scoreInputId="game-team2-score"
+          scoreLabel="Team 2 Score"
+          scoreValue={form.team2Score}
+          onScoreChange={(value) => handleChange("team2Score", value)}
+        />
       </div>
 
       <div className="space-y-2">
