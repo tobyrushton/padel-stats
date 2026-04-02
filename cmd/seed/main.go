@@ -67,4 +67,17 @@ func main() {
 		Set("is_accepted_by_admin = ?", true).
 		Where("id = ?", r.User.ID).
 		Exec(context.Background())
+
+	season := &models.Season{
+		Name:      "Season 1",
+		StartDate: time.Now(),
+		EndDate:   time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC),
+	}
+
+	_, err = db.NewInsert().
+		Model(season).
+		Exec(context.Background())
+	if err != nil {
+		panic(err)
+	}
 }

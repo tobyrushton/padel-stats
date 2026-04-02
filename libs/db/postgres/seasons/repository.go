@@ -36,12 +36,12 @@ func (r *Repository) GetActiveSeason(ctx context.Context) (*leaderboarddomain.Se
 }
 
 func (r *Repository) GetSeasonByDate(ctx context.Context, playedAt time.Time) (*leaderboarddomain.Season, error) {
-	lookupTime := playedAt.UTC().String()
+	lookupDate := playedAt.UTC().Format("2006-01-02")
 	seasons := make([]*leaderboarddomain.Season, 0, 2)
 
 	err := r.db.NewSelect().
 		Model(&seasons).
-		Where("? BETWEEN start_date AND end_date", lookupTime).
+		Where("?::date BETWEEN start_date::date AND end_date::date", lookupDate).
 		OrderExpr("start_date DESC").
 		Limit(2).
 		Scan(ctx)

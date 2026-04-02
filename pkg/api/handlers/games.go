@@ -76,6 +76,7 @@ func (h *GamesHandler) CreateGame(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.gamesService.CreateGame(r.Context(), session.UserID, &input)
 	if err != nil {
+		fmt.Println(err)
 		handleGameError(w, err)
 		return
 	}
