@@ -4,7 +4,6 @@ import "time"
 
 // CreateGameInput is the request payload for creating a game with four players.
 type CreateGameInput struct {
-	SeasonID       int64     `json:"seasonId" format:"int64"`
 	Team1Player1ID int64     `json:"team1Player1Id" format:"int64"`
 	Team1Player2ID int64     `json:"team1Player2Id" format:"int64"`
 	Team2Player1ID int64     `json:"team2Player1Id" format:"int64"`
@@ -20,6 +19,13 @@ type Player struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Username  string `json:"username"`
+}
+
+type Season struct {
+	ID        int64     `json:"id" format:"int64"`
+	Name      string    `json:"name"`
+	StartDate time.Time `json:"startDate" format:"date-time"`
+	EndDate   time.Time `json:"endDate" format:"date-time"`
 }
 
 // Game is an API-safe game contract.
@@ -40,6 +46,7 @@ type Game struct {
 	Team1Player2   *Player   `json:"team1Player2,omitempty"`
 	Team2Player1   *Player   `json:"team2Player1,omitempty"`
 	Team2Player2   *Player   `json:"team2Player2,omitempty"`
+	Season         *Season   `json:"season,omitempty"`
 }
 
 // PlayerRecord is a persistence-layer contract for user details attached to a game.
@@ -48,6 +55,13 @@ type PlayerRecord struct {
 	FirstName string
 	LastName  string
 	Username  string
+}
+
+type SeasonRecord struct {
+	ID        int64
+	Name      string
+	StartDate time.Time
+	EndDate   time.Time
 }
 
 // GameRecord is a persistence-layer contract independent from DB model structs.
@@ -68,6 +82,7 @@ type GameRecord struct {
 	Team1Player2   *PlayerRecord
 	Team2Player1   *PlayerRecord
 	Team2Player2   *PlayerRecord
+	Season         *SeasonRecord
 }
 
 func gameFromRecord(record *GameRecord) *Game {
@@ -92,6 +107,7 @@ func gameFromRecord(record *GameRecord) *Game {
 		Team1Player2:   playerFromRecord(record.Team1Player2),
 		Team2Player1:   playerFromRecord(record.Team2Player1),
 		Team2Player2:   playerFromRecord(record.Team2Player2),
+		Season:         seasonFromRecord(record.Season),
 	}
 }
 
@@ -105,5 +121,18 @@ func playerFromRecord(record *PlayerRecord) *Player {
 		FirstName: record.FirstName,
 		LastName:  record.LastName,
 		Username:  record.Username,
+	}
+}
+
+func seasonFromRecord(record *SeasonRecord) *Season {
+	if record == nil {
+		return nil
+	}
+
+	return &Season{
+		ID:        record.ID,
+		Name:      record.Name,
+		StartDate: record.StartDate,
+		EndDate:   record.EndDate,
 	}
 }

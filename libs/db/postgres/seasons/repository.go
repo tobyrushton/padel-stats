@@ -32,17 +32,31 @@ func (r *Repository) GetSeasons(ctx context.Context) ([]*leaderboarddomain.Seaso
 }
 
 func (r *Repository) GetActiveSeason(ctx context.Context) (*leaderboarddomain.Season, error) {
-	season := &leaderboarddomain.Season{}
-	err := r.db.NewSelect().
-		Model(season).
-		Where("? BETWEEN start_date AND end_date", time.Now().UTC().String()).
-		Scan(ctx)
+	return r.GetSeasonByDate(ctx, time.Now().UTC())
+}
 
+func (r *Repository) GetSeasonByDate(ctx context.Context, playedAt time.Time) (*leaderboarddomain.Season, error) {
+	lookupDate := playedAt.UTC().Format("2006-01-02")
+	seasons := make([]*leaderboarddomain.Season, 0, 2)
+
+	err := r.db.NewSelect().
+		Model(&seasons).
+		Where("?::date BETWEEN start_date::date AND end_date::date", lookupDate).
+		OrderExpr("start_date DESC").
+		Limit(2).
+		Scan(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return season, nil
+	switch len(seasons) {
+	case 0:
+		return nil, leaderboarddomain.ErrSeasonNotFoundForDate
+	case 1:
+		return seasons[0], nil
+	default:
+		return nil, leaderboarddomain.ErrMultipleSeasonsForDate
+	}
 }
 
 func (r *Repository) CreateSeason(ctx context.Context, season *leaderboarddomain.CreateSeasonInput) (*leaderboarddomain.Season, error) {

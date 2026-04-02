@@ -3,6 +3,9 @@ package games
 import (
 	"context"
 	"errors"
+	"time"
+
+	seasonsdomain "github.com/tobyrushton/padel-stats/libs/seasons"
 )
 
 //go:generate go tool counterfeiter -generate
@@ -15,16 +18,24 @@ type GamesRepository interface {
 	DeleteGameByID(ctx context.Context, gameID int64) error
 }
 
-type Service struct {
-	repo GamesRepository
+type SeasonResolver interface {
+	GetSeasonByDate(ctx context.Context, playedAt time.Time) (*seasonsdomain.Season, error)
 }
 
-func NewService(repo GamesRepository) (*Service, error) {
+type Service struct {
+	repo           GamesRepository
+	seasonResolver SeasonResolver
+}
+
+func NewService(repo GamesRepository, seasonResolver SeasonResolver) (*Service, error) {
 	if repo == nil {
 		return nil, errors.New("games repository is required")
 	}
+	if seasonResolver == nil {
+		return nil, errors.New("season resolver is required")
+	}
 
-	return &Service{repo: repo}, nil
+	return &Service{repo: repo, seasonResolver: seasonResolver}, nil
 }
 
 func (s *Service) CreateGame(ctx context.Context, creatorID int64, input *CreateGameInput) (*Game, error) {
@@ -40,9 +51,21 @@ func (s *Service) CreateGame(ctx context.Context, creatorID int64, input *Create
 		return nil, err
 	}
 
+	season, err := s.seasonResolver.GetSeasonByDate(ctx, input.PlayedAt.UTC())
+	if err != nil {
+		switch {
+		case errors.Is(err, seasonsdomain.ErrSeasonNotFoundForDate):
+			return nil, ErrNoSeasonForPlayedAt
+		case errors.Is(err, seasonsdomain.ErrMultipleSeasonsForDate):
+			return nil, ErrSeasonOverlap
+		default:
+			return nil, err
+		}
+	}
+
 	record := &GameRecord{
 		CreatorID:      creatorID,
-		SeasonID:       input.SeasonID,
+		SeasonID:       season.ID,
 		Team1Player1ID: input.Team1Player1ID,
 		Team1Player2ID: input.Team1Player2ID,
 		Team2Player1ID: input.Team2Player1ID,

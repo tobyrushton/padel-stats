@@ -51,6 +51,10 @@ func (r *Repository) FindGamesByPlayerID(ctx context.Context, playerID int64) ([
 	err := r.db.NewSelect().
 		Model(&gameModels).
 		Where("team1_player1_id = ? OR team1_player2_id = ? OR team2_player1_id = ? OR team2_player2_id = ?", playerID, playerID, playerID, playerID).
+		Relation("Team1Player1").
+		Relation("Team1Player2").
+		Relation("Team2Player1").
+		Relation("Team2Player2").
 		OrderExpr("played_at DESC").
 		Scan(ctx)
 	if err != nil {
@@ -73,6 +77,7 @@ func (r *Repository) FindGameByID(ctx context.Context, gameID int64) (*gamedomai
 		Relation("Team1Player2").
 		Relation("Team2Player1").
 		Relation("Team2Player2").
+		Relation("Season").
 		Where("g.id = ?", gameID).
 		Limit(1).
 		Scan(ctx)
@@ -128,6 +133,7 @@ func gameRecordFromModel(model *models.Game) *gamedomain.GameRecord {
 		Team1Player2:   playerRecordFromModel(model.Team1Player2),
 		Team2Player1:   playerRecordFromModel(model.Team2Player1),
 		Team2Player2:   playerRecordFromModel(model.Team2Player2),
+		Season:         seasonRecordFromModel(model.Season),
 	}
 }
 
@@ -141,5 +147,18 @@ func playerRecordFromModel(model *models.User) *gamedomain.PlayerRecord {
 		FirstName: model.FirstName,
 		LastName:  model.LastName,
 		Username:  model.Username,
+	}
+}
+
+func seasonRecordFromModel(model *models.Season) *gamedomain.SeasonRecord {
+	if model == nil {
+		return nil
+	}
+
+	return &gamedomain.SeasonRecord{
+		ID:        model.ID,
+		Name:      model.Name,
+		StartDate: model.StartDate,
+		EndDate:   model.EndDate,
 	}
 }

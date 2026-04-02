@@ -713,10 +713,6 @@ const docTemplate = `{
                     "type": "string",
                     "format": "date-time"
                 },
-                "seasonId": {
-                    "type": "integer",
-                    "format": "int64"
-                },
                 "team1Player1Id": {
                     "type": "integer",
                     "format": "int64"
@@ -759,6 +755,9 @@ const docTemplate = `{
                 "playedAt": {
                     "type": "string",
                     "format": "date-time"
+                },
+                "season": {
+                    "$ref": "#/definitions/games.Season"
                 },
                 "seasonId": {
                     "type": "integer",
@@ -819,6 +818,26 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "games.Season": {
+            "type": "object",
+            "properties": {
+                "endDate": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "startDate": {
+                    "type": "string",
+                    "format": "date-time"
                 }
             }
         },
