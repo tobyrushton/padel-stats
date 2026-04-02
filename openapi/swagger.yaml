@@ -90,6 +90,8 @@ definitions:
       playedAt:
         format: date-time
         type: string
+      season:
+        $ref: '#/definitions/games.Season'
       seasonId:
         format: int64
         type: integer
@@ -131,6 +133,20 @@ definitions:
       lastName:
         type: string
       username:
+        type: string
+    type: object
+  games.Season:
+    properties:
+      endDate:
+        format: date-time
+        type: string
+      id:
+        format: int64
+        type: integer
+      name:
+        type: string
+      startDate:
+        format: date-time
         type: string
     type: object
   handlers.ErrorResponse:

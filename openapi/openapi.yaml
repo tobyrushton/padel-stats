@@ -572,6 +572,8 @@ components:
         playedAt:
           type: string
           format: date-time
+        season:
+          $ref: "#/components/schemas/games.Season"
         seasonId:
           type: integer
           format: int64
@@ -614,6 +616,20 @@ components:
           type: string
         username:
           type: string
+    games.Season:
+      type: object
+      properties:
+        endDate:
+          type: string
+          format: date-time
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date-time
     handlers.ErrorResponse:
       type: object
       properties:

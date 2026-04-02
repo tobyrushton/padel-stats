@@ -124,7 +124,7 @@ if (!Number.isInteger(gameID) || gameID <= 0) {
 
           <div class="rounded-lg border border-border bg-background p-4 text-sm">
             <p>
-              <span class="text-muted-foreground">Season ID:</span> {game.seasonId}
+              <span class="text-muted-foreground">Season:</span> {game.season ? game.season.name : "N/A"}
             </p>
             <p class="mt-1">
               <span class="text-muted-foreground">Created:</span> {formatDateTime(game.createdAt)}

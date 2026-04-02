@@ -935,6 +935,7 @@ export interface components {
             id?: number;
             /** Format: date-time */
             playedAt?: string;
+            season?: components["schemas"]["games.Season"];
             /** Format: int64 */
             seasonId?: number;
             team1Player1?: components["schemas"]["games.Player"];
@@ -960,6 +961,15 @@ export interface components {
             id?: number;
             lastName?: string;
             username?: string;
+        };
+        "games.Season": {
+            /** Format: date-time */
+            endDate?: string;
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            /** Format: date-time */
+            startDate?: string;
         };
         "handlers.ErrorResponse": {
             error?: string;
