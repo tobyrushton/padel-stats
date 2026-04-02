@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import {
@@ -14,7 +13,9 @@ import { createApiClient, type LeaderboardEntry } from "@/lib/api-client"
 
 import LeaderboardTable from "./LeaderboardTable"
 
-type FilterMode = "all-time" | "season"
+const ALL_TIME_SCOPE = "all-time"
+
+type ScopeValue = typeof ALL_TIME_SCOPE | `season:${number}`
 
 interface LeaderboardWorkspaceProps {
   apiBaseUrl: string
@@ -25,8 +26,21 @@ interface SeasonOption {
   name: string
 }
 
-function buildTitle(mode: FilterMode, seasonName: string | null): string {
-  if (mode === "all-time") {
+function toSeasonScope(seasonID: number): ScopeValue {
+  return `season:${seasonID}`
+}
+
+function parseSeasonScope(scope: ScopeValue): number | null {
+  if (scope === ALL_TIME_SCOPE) {
+    return null
+  }
+
+  const parsed = Number.parseInt(scope.replace("season:", ""), 10)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+}
+
+function buildTitle(scope: ScopeValue, seasonName: string | null): string {
+  if (scope === ALL_TIME_SCOPE) {
     return "All-Time Leaderboard"
   }
 
@@ -40,19 +54,14 @@ function buildTitle(mode: FilterMode, seasonName: string | null): string {
 export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspaceProps) {
   const apiClient = useMemo(() => createApiClient(apiBaseUrl), [apiBaseUrl])
 
-  const [mode, setMode] = useState<FilterMode>("all-time")
+  const [selectedScope, setSelectedScope] = useState<ScopeValue>(ALL_TIME_SCOPE)
   const [seasons, setSeasons] = useState<SeasonOption[]>([])
-  const [selectedSeasonID, setSelectedSeasonID] = useState<number | null>(null)
+  const [activeSeasonID, setActiveSeasonID] = useState<number | null>(null)
   const [isLoadingSeasons, setIsLoadingSeasons] = useState(true)
   const [seasonErrorMessage, setSeasonErrorMessage] = useState<string | null>(null)
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const handleModeChange = (nextMode: FilterMode) => {
-    setMode(nextMode)
-    setErrorMessage(null)
-  }
 
   useEffect(() => {
     let isMounted = true
@@ -62,8 +71,12 @@ export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspac
         setIsLoadingSeasons(true)
         setSeasonErrorMessage(null)
 
-        const result = await apiClient.listSeasons()
-        const normalized = result
+        const [seasonResult, activeSeasonResult] = await Promise.all([
+          apiClient.listSeasons(),
+          apiClient.getActiveSeason().catch(() => null),
+        ])
+
+        const normalized = seasonResult
           .filter((season) => typeof season.id === "number" && season.id > 0)
           .map((season) => ({
             id: season.id as number,
@@ -77,13 +90,31 @@ export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspac
           return
         }
 
+        const activeID =
+          activeSeasonResult && typeof activeSeasonResult.id === "number" && activeSeasonResult.id > 0
+            ? activeSeasonResult.id
+            : null
+        const activeExists = activeID !== null && normalized.some((season) => season.id === activeID)
+
         setSeasons(normalized)
-        setSelectedSeasonID(normalized.length > 0 ? normalized[0].id : null)
+        setActiveSeasonID(activeID)
+        if (activeExists && activeID !== null) {
+          setSelectedScope(toSeasonScope(activeID))
+        } else if (normalized.length > 0) {
+          setSelectedScope(toSeasonScope(normalized[0].id))
+        } else {
+          setSelectedScope(ALL_TIME_SCOPE)
+        }
+
+        if (activeID === null && normalized.length > 0) {
+          setSeasonErrorMessage("Active season unavailable. Defaulted to the latest season.")
+        }
       } catch {
         if (isMounted) {
-          setSeasonErrorMessage("Could not load seasons right now.")
+          setSeasonErrorMessage("Could not load seasons right now. All-time leaderboard is still available.")
           setSeasons([])
-          setSelectedSeasonID(null)
+          setActiveSeasonID(null)
+          setSelectedScope(ALL_TIME_SCOPE)
         }
       } finally {
         if (isMounted) {
@@ -107,7 +138,7 @@ export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspac
         setIsLoading(true)
         setErrorMessage(null)
 
-        if (mode === "all-time") {
+        if (selectedScope === ALL_TIME_SCOPE) {
           const result = await apiClient.getAllTimeLeaderboard()
           if (isMounted) {
             setEntries(result)
@@ -129,7 +160,8 @@ export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspac
           return
         }
 
-        if (!selectedSeasonID || selectedSeasonID <= 0) {
+        const selectedSeasonID = parseSeasonScope(selectedScope)
+        if (!selectedSeasonID) {
           if (isMounted) {
             setEntries([])
           }
@@ -157,75 +189,95 @@ export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspac
     return () => {
       isMounted = false
     }
-  }, [apiClient, isLoadingSeasons, mode, seasonErrorMessage, selectedSeasonID])
+  }, [apiClient, isLoadingSeasons, seasonErrorMessage, selectedScope])
 
+  const selectedSeasonID = parseSeasonScope(selectedScope)
   const selectedSeasonName =
     selectedSeasonID !== null
       ? seasons.find((season) => season.id === selectedSeasonID)?.name ?? null
       : null
 
-  const title = buildTitle(mode, selectedSeasonName)
+  const title = buildTitle(selectedScope, selectedSeasonName)
+  const currentScopeLabel =
+    selectedScope === ALL_TIME_SCOPE
+      ? "All Time"
+      : selectedSeasonName ?? "Season"
+
+  const selectPlaceholder = isLoadingSeasons ? "Loading scopes..." : "Select leaderboard scope"
 
   return (
     <section className="w-full space-y-6">
-      <div className="space-y-3">
-        <h1 className="text-2xl font-semibold">Leaderboard</h1>
-        <p className="text-sm text-muted-foreground">
-          Rankings are derived from game score difference. Filter to all-time or a specific season.
-        </p>
-      </div>
+      <Card className="animate-in fade-in-0 slide-in-from-top-2 duration-300 overflow-hidden border-border/80">
+        <CardContent className="relative p-5 sm:p-6">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.18),transparent_45%),radial-gradient(circle_at_bottom_left,hsl(var(--accent)/0.2),transparent_50%)]"
+          />
 
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant={mode === "all-time" ? "default" : "outline"}
-              onClick={() => handleModeChange("all-time")}
-            >
-              All Time
-            </Button>
-            <Button
-              type="button"
-              variant={mode === "season" ? "default" : "outline"}
-              onClick={() => handleModeChange("season")}
-            >
-              Season
-            </Button>
-          </div>
+          <div className="relative space-y-5">
+            <div className="space-y-3">
+              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                Live Rankings
+              </p>
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Leaderboard</h1>
+              <p className="max-w-2xl text-sm text-muted-foreground">
+                Score difference drives rankings. Switch between all-time and season snapshots from one selector.
+              </p>
+            </div>
 
-          {mode === "season" ? (
-            <div className="w-full max-w-xs space-y-2">
-              <Label htmlFor="season-select">
-                Season
-              </Label>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="rounded-full border border-border/80 bg-background/80 px-3 py-1 font-medium">
+                Scope: {currentScopeLabel}
+              </span>
+              {!isLoading && !errorMessage ? (
+                <span className="rounded-full border border-border/80 bg-background/80 px-3 py-1 font-medium">
+                  {entries.length} players ranked
+                </span>
+              ) : null}
+            </div>
+
+            <div className="w-full max-w-sm space-y-2">
+              <Label htmlFor="leaderboard-scope-select">Leaderboard scope</Label>
               <Select
-                value={selectedSeasonID !== null ? String(selectedSeasonID) : undefined}
-                onValueChange={(value) => setSelectedSeasonID(Number.parseInt(value, 10))}
-                disabled={isLoadingSeasons || !!seasonErrorMessage || seasons.length === 0}
+                value={selectedScope}
+                onValueChange={(value) => {
+                  setSelectedScope(value as ScopeValue)
+                  setErrorMessage(null)
+                }}
+                disabled={isLoadingSeasons && seasons.length === 0}
               >
-                <SelectTrigger id="season-select" className="w-full">
-                  <SelectValue placeholder={isLoadingSeasons ? "Loading seasons..." : "Select season"} />
+                <SelectTrigger id="leaderboard-scope-select" className="w-full bg-background/90">
+                  <SelectValue placeholder={selectPlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
-                  {seasons.map((season) => (
-                    <SelectItem key={season.id} value={String(season.id)}>
-                      {season.name}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value={ALL_TIME_SCOPE}>All Time</SelectItem>
+                  {seasons.map((season) => {
+                    const isCurrent = activeSeasonID !== null && season.id === activeSeasonID
+                    const label = isCurrent ? `${season.name} (Current)` : season.name
+
+                    return (
+                      <SelectItem key={season.id} value={toSeasonScope(season.id)}>
+                        {label}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
 
-              {seasonErrorMessage ? (
-                <p className="text-sm text-destructive">{seasonErrorMessage}</p>
-              ) : null}
-
-              {!isLoadingSeasons && !seasonErrorMessage && seasons.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No seasons available yet.</p>
-              ) : null}
+              <p className="text-xs text-muted-foreground">
+                Ranking order: score difference, wins, then username.
+              </p>
             </div>
-          ) : null}
+
+            {seasonErrorMessage ? (
+              <p className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
+                {seasonErrorMessage}
+              </p>
+            ) : null}
+
+            {!isLoadingSeasons && !seasonErrorMessage && seasons.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No seasons available yet. Showing all-time by default.</p>
+            ) : null}
           </div>
         </CardContent>
       </Card>
@@ -238,7 +290,7 @@ export default function LeaderboardWorkspace({ apiBaseUrl }: LeaderboardWorkspac
         </Card>
       ) : (
         <>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">{title}</h2>
             <p className="text-xs text-muted-foreground">Sorted by score difference, wins, username</p>
           </div>
