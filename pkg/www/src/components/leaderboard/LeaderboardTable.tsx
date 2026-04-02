@@ -18,7 +18,7 @@ export default function LeaderboardTable({ entries }: LeaderboardTableProps) {
   return (
     <Card>
       <CardContent className="p-0">
-        <Table className="min-w-[700px] text-left">
+        <Table className="min-w-[600px] text-left">
           <TableHeader>
             <TableRow className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground hover:bg-muted/50">
               <TableHead className="px-4 py-3">Rank</TableHead>

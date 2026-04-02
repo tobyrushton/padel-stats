@@ -104,7 +104,7 @@ export default function SignUpForm({ apiBaseUrl }: SignUpFormProps) {
     <form onSubmit={handleSubmit} className="w-full max-w-md space-y-5 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
       <div className="space-y-1">
         <h1 className="text-xl font-semibold">Create account</h1>
-        <p className="text-sm text-muted-foreground">Set up your account to start tracking your padel stats.</p>
+        <p className="text-sm text-muted-foreground">Set up your account to start tracking your matches.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

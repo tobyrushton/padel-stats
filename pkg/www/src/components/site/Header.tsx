@@ -66,7 +66,7 @@ export default function Header() {
     <header className="border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
         <a href="/" className="text-sm font-semibold tracking-wide">
-          Padel Stats
+          Bexbox Premier Padel
         </a>
 
         <nav className="flex items-center gap-2">
